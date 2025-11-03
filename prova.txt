@@ -1,0 +1,124 @@
+# MODELO DE PROVA DE AEDS (TOTAL: 20 PONTOS)
+
+---
+
+## QUESTÃO 01(2 dessas mais complexo e dificil) — Correção de Código (4 PONTOS)
+
+**Objetivo:** Identificar e corrigir erros sutis em um algoritmo existente.
+
+**Tipos de questão:**
+
+* **Tipo A:** Correção de erros de gerenciamento de estado e controle de fluxo
+  *Características:* variáveis de estado inconsistentes, condições de parada mal definidas, transições de estado incorretas
+  *Complexidade:* alta, exige análise detalhada do estado interno e sequência de execução
+
+* **Tipo B:** Correção de erros de manipulação de estruturas e limites
+  *Características:* acesso além dos limites, manipulação incorreta de índices, violação de invariantes de estrutura
+  *Complexidade:* alta, requer compreensão da estrutura de dados e seus limites
+
+* **Tipo C:** Correção de erros de lógica operacional e transformação de dados
+  *Características:* operações aplicadas em ordem incorreta, transformações inconsistentes, falha na preservação de invariantes
+  *Complexidade:* alta, exige compreensão do processo de transformação de dados
+
+**Instruções:**
+
+* Crie **uma questão** com código contendo 3 a 4 erros inter-relacionados.
+* Os erros devem ser sutis e exigir análise profunda do algoritmo.
+* Descreva o comportamento esperado **sem revelar a natureza dos erros**.
+* Os erros devem ser corrigíveis com modificações pontuais (sem redesign completo).
+
+> A IA deve escolher aleatoriamente entre os modelos A, B ou C para a questão.
+
+---
+
+## QUESTÃO 02 (2 dessas mais complexo e dificil)— Conceitual em formato de codigo  (4 PONTOS)
+
+**Objetivo:** Avaliar a compreensão de conceitos fundamentais de programação e estruturas de dados.
+
+**Formatos possíveis:**
+
+* **Tipo A:** 2 alternativas como perguntas diretas sobre diferentes aspectos de um mesmo tópico.
+* **Tipo B:** 2 alternativas como perguntas conceituais que exigem explicações teóricas.
+* **Tipo C:** 2 alternativas apresentando trechos de código ou problemas práticos para análise.
+
+**Instruções:**
+
+* Crie **uma questão** com 2 alternativas (a, b), cada uma contendo um problema único e distinto.
+* O formato deve ser claro e adequado para uma prova escrita.
+
+> A IA deve escolher aleatoriamente entre os modelos A, B ou C para a questão.
+
+---
+
+## QUESTÃO 03(2 dessas mais complexo e dificil) — Análise de Função/Recursão (5 PONTOS)
+
+**Objetivo:** Analisar uma função e compreender o comportamento recursivo.
+
+**Tipos de questão:**
+
+* **Tipo A:** Função recursiva simples (ex.: soma incremental)
+  Perguntas sugeridas:
+
+  * Qual é o objetivo geral da função?
+  * Qual é o resultado retornado para uma entrada específica?
+  * Explique o caso base e o passo recursivo.
+
+* **Tipo B:** Função recursiva com operação composta (ex.: multiplicação)
+  Perguntas sugeridas:
+
+  * Qual o comportamento da função para uma entrada crítica?
+  * Qual o resultado para dois valores específicos?
+  * Descreva a sequência de chamadas recursivas para uma entrada pequena.
+
+* **Tipo C:** Função com recursão múltipla (ex.: dois parâmetros)
+  Perguntas sugeridas:
+
+  * Explique a lógica de combinação dos resultados das chamadas recursivas.
+  * Qual é o resultado final para um par de entradas específicas?
+  * Como o resultado seria alterado se o caso base mudasse?
+
+**Instruções:**
+
+* Crie **uma questão** com código em C e 3 a 4 subitens de pergunta.
+* O código deve ser claro e comentado para o contexto.
+
+> A IA deve escolher aleatoriamente entre os modelos A, B ou C para a questão.
+
+---
+
+## QUESTÃO 04 (2 dessas mais complexo e dificil) — Implementação Completa em C (7 PONTOS)
+
+**Objetivo:** Criar um programa completo em C com requisitos específicos, mantendo dificuldade semelhante entre os modelos.
+
+**Tipos de questão:**
+
+* **Tipo A:** Sistema de processamento de dados sequenciais com validação
+  *Requisitos:* entrada de dados limitada, armazenamento em estrutura indexada, operação agregada simples, tratamento de valores inválidos
+  *Complexidade:* média-baixa, foco em validação de entrada
+
+* **Tipo B:** Sistema de transformação de dados com processamento condicional
+  *Requisitos:* entrada de tamanho variável, múltiplas operações de transformação, saída detalhada do processo, tratamento de casos especiais
+  *Complexidade:* média, foco em processamento em etapas
+
+* **Tipo C:** Sistema de análise de estrutura bidimensional com critérios complexos
+  *Requisitos:* manipulação de estrutura bidimensional, aplicação de critérios compostos, verificação de duplicidades/restrições, saída formatada complexa
+  *Complexidade:* alta, foco em algoritmos de busca e análise
+
+**Instruções:**
+
+* Crie **uma questão completa** seguindo o tipo escolhido.
+* Não identifique a área/matéria específica na questão.
+* Especifique claramente os requisitos funcionais sem revelar a implementação.
+* Inclua exemplos de entrada/saída quando necessário.
+* Mantenha o mesmo nível de dificuldade entre os tipos.
+
+> A IA deve escolher aleatoriamente entre os modelos A, B ou C para a questão.
+
+---
+
+## Observações gerais
+
+* **Pontuação total:** 20 pontos
+* A dificuldade é mantida entre os modelos, mas a implementação e tipo de tarefa variam.
+* Cada questão fornece **apenas o modelo conceitual**, sem enunciado pronto.
+* Permite criar provas diferentes a partir do mesmo modelo, escolhendo aleatoriamente entre os tipos A, B ou C para cada questão.

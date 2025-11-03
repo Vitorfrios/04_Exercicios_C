@@ -1,0 +1,624 @@
+
+
+Lista 0 (Exercícios Iniciais)
+
+
+Ex 1
+Calcular o perímetro de um quadrado de lado igual a sete.
+
+
+Ex 2
+Calcular a área de um círculo de raio igual a um.
+
+
+Ex 3
+A representação em Farenheit da temperatura igual a 37,777777 graus celsius, sabendo que uma medida em celsius pode ser convertida em Farenheit através da seguinte fórmula:
+Fahrenheit = celsius x 1,8 + 32
+
+
+Ex 4
+Calcular o seu peso ideal, sabendo que:
+- Peso Ideal de pessoas de gênero masculino: (72,7 x altura) – 58
+- Peso Ideal de pessoas de gênero feminino: (62,1 x altura) – 44,7
+
+Lista 1 (Entrada, Processamento e Saída)
+
+
+Ex 5
+Calcular a área de um círculo. Planeje qual(is) dado(s) precisa(m) ser lido(s), qual resulta de um cálculo e qual precisa ser escrito.
+
+
+Ex 6
+Calcular a representação em Farenheit de uma temperatura em graus celsius. Uma medida em celsius pode ser convertida em Farenheit através da seguinte fórmula:
+Fahrenheit = celsius x 1.8 + 32
+
+
+Ex 7
+Calcular o peso ideal de um homem, sabendo que:
+Peso Ideal de pessoas de gênero masculino: (72.7 x altura) – 58
+
+
+Ex 8
+Calcular o peso ideal de uma mulher, sabendo que:
+Peso Ideal de pessoas de gênero feminino: (62.1 x altura) – 44.7
+
+Lista 2 (Estruturas de Seleção)
+
+
+Ex 1
+Construa um algoritmo que identifique qual o maior valor entre dois números reais lidos.
+
+
+Ex 2
+Construa um algoritmo que verifique qual o maior valor entre três números reais lidos.
+
+
+Ex 3
+Construa um algoritmo que identifique se é um inteiro lido par ou ímpar.
+
+
+Ex 4
+Refaça os programas do cálculo do peso ideal de uma pessoa, unificando ambos, peso ideal de pessoas do gênero masculino e do gênero feminino. O usuário deverá informar o gênero através de um único caractere, 'M' ou 'F', representando masculino ou feminino, respectivamente.
+
+Lista 3 (Estruturas de Seleção)
+
+
+Ex 
+
+Identificar se um ano lido é bissexto ou não. Pesquise o que deve ser observado para verificar se um ano é bissexto.
+
+
+Ex 2
+Construa um algoritmo que identifique o segundo maior entre três valores lidos.
+
+
+Ex 3
+A partir da leitura dos três lados de um triângulo, escrever se é ele um triângulo equilátero, isóscele ou escaleno. Entretanto, antes, verificar se os valores lidos atendem aos requisitos para constituir um triângulo – pesquise o que deve ser observado para validar um triângulo.
+
+
+Lista 4 (Estruturas de Repetição)
+
+Ex 1
+Refaça o algoritmo para calcular o número de dias vividos por uma pessoa até o último aniversário. Rejeite a leitura de idade fora do intervalo 0..150.
+
+
+Ex 2
+Construa um programa que escreva na tela do monitor de vídeo os números inteiros de dez até um (ordem decrescente). Utilize estrutura de repetição com teste no final.
+
+
+Ex 3
+Construa uma nova versão para o programa que calcula o peso ideal de uma pessoa. Nela, repita a leitura de cada dado caso os valores lidos, gênero e idade, estejam fora do domínio.
+
+
+Ex 
+
+Na lista anterior, foi elaborado um programa que proveu as funcionalidades de uma calculadora para as quatro operações aritméticas. Elas foram oferecidas através de um menu e a opção do usuário foi tratada através da instrução switch. Crie uma nova versão para a calculadora. Nela, acrescente ao programa a possibilidade de serem realizados vários cálculos. Para isto, após a escrita do resultado de cada operação, o fluxo de execução deverá voltar à escrita do menu. Desta forma, o menu deverá ser alterado acrescentando a ele uma nova opção: "0 - sair do programa". Esta deverá ser a primeira opção do menu. Quando selecionada, a mensagem "Obrigado por usar este programa" deverá ser escrita e o programa finalizado. Caso contrário, tratar a operação aritmética selecionada ou informar tratar-se de uma opção inválida.
+
+
+Ex 
+
+Construa uma nova versão para o programa que identifica se é um ano lido bissexto ou não. O programa deverá permitir ao usuário testar mais que um ano. Para isto, ao final, o programa deverá enviar uma mensagem ao usuário questionando seu desejo de verificar um novo ano e ler a resposta do usuário (S/N). De acordo com a resposta lida, uma nova iteração deverá ocorrer ou o programa ser finalizado. O programa deverá rejeitar a leitura de valores diferentes de [S/N]. Caso isto ocorra, o programa deverá repetir a leitura da resposta do usuário.
+
+
+Lista 5 (Estruturas de Repetição)
+
+Ex 
+
+Calcular e escrever a potenciação. A base e o expoente deverão ser valores lidos – rejeitar a leitura de valores inválidos. Considere: base um valor real. Expoente: um número inteiro, positivo ou nulo(zero). Obs: Não usar a biblioteca Math. A potenciação deverá ser calculada de forma iterativa.
+
+
+Ex 2
+Considere uma turma com n alunos, sendo n um valor lido. Construa um programa que leia as notas obtidas pelos alunos [0..100]. Para cada nota lida, o programa deverá informar estar o aluno aprovado ou não, sabendo ser sessenta a nota mínima requerida para aprovação. Ao final, o programa deverá informar a nota média da turma, bem como a maior e a menor nota da turma. Ao ler a nota de um aluno, rejeitar a leitura de nota inválida, sabendo ser cem a nota máxima.
+
+Lista 6 (Estruturas de Repetição)
+
+
+Ex 1
+Construa um programa que permita identificar o perfil da turma:
+- Percentual de homens e de mulheres
+- Percentual de alunos maiores em idade
+- Idade da pessoa mais velha
+- Idade da pessoa mais nova
+
+Domínio dos dados:
+Gênero: m/f, sendo 'm'=masculino e 'f'=feminino.
+Idade: 0..100
+* Deverão ser rejeitados os valores lidos fora do domínio (observe que aqui deve ser utilizada a est. de rep. com teste no final)
+* O número de alunos da turma deverá ser um valor lido
+
+
+Ex 2
+Construir uma nova versão para o seguinte problema: ler a nota obtida por cada aluno da turma. A leitura deverá ser interrompida quando for informada uma nota igual a zero (flag). Ao final do programa, deverão ser escritos o percentual de alunos aprovados e o percentual de alunos reprovados, sabendo ser requerida uma nota mínima igual a 60 para a aprovação do aluno. Domínio da nota: 0..100 – Rejeitar a leitura de valores inválidos (fora do domínio).
+
+
+Ex 3
+Calcular e escrever o valor de H, sendo H igual a:
+H = 1/1 + 1/3 + 1/9 + 1/27 + ...
+H com precisão de N termos, sendo N um valor lido.
+Obs: não se esqueça que o operador de divisão em C é sobrecarregado: divisão inteira e divisão real – a operação é definida em termos do tipo dos operandos.
+
+
+Ex 4
+Calcule e escreva os n primeiros termos Fibonacci, sendo n um valor lido. A sequência Fibonacci é constituída dos seguintes termos:
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
+
+Lista 7 (Estruturas de Repetição)
+
+
+Ex 1
+Ler um número natural e verificar se é ele primo ou não. Um número natural é primo se é ele divisível apenas por um e por si próprio. Lembre-se que o conjunto dos números naturais é composto pelos valores inteiros e positivos. Rejeitar a leitura de número inválido (não pertencente ao conjunto de números naturais).
+
+
+Ex 2
+Construa um programa que leia um conjunto de n valores inteiros e positivos, sendo n também um valor lido. O programa deverá calcular e escrever o maior número par e o maior número ímpar lidos. Rejeitar a leitura de valores inválidos. Ao final, permitir ao usuário verificar outros números ou encerrar ('C' para continuar, 'S' para sair). * Rejeitar a leitura de valores inválidos em todos os casos de leitura.
+
+
+Ex 3
+Calcular e escrever os dez primeiros termos da sequência abaixo:
+10/100, 99/11, 12/98, 97/13, 14/96, ...
+
+
+Ex 4
+Ler um inteiro qualquer. Calcular e escrever o número de divisores que o número lido possui.
+
+Lista 8 (Estruturas de Repetição)
+
+
+Ex 1
+Ler um conjunto de números inteiros e, ao final da leitura, informar a média dos valores lidos. O processo de leitura deverá ser interrompido quando um número igual a zero for obtido (flag). Note que este valor é unicamente o indicativo de término, não devendo ser considerado para os cálculos que envolvem os demais números lidos.
+
+
+Ex 2
+Construa um programa que leia uma sequência de números naturais. A leitura deverá ser finalizada com flag igual a zero. Ao interromper a leitura, o programa deverá informar o percentual de números pares lidos cujo valor esteja no intervalo entre 1.000 e 10.000.
+
+
+Ex 3
+Uma empresa deseja aprimorar sua política de salários. Para isso, deseja saber:
+- o percentual de funcionários com salário igual ao salário mínimo;
+- a amplitude salarial (diferença entre o maior e o menor salário da empresa)
+O valor do salário mínimo também deverá ser um valor lido. Considere que a empresa tenha n funcionários, sendo n também um valor lido. Rejeitar a leitura de valores inválidos.
+
+
+Ex 
+
+Verificar se dois números naturais são primos entre si. Dois números naturais são ditos primos entre si caso não exista divisores comuns a ambos, exceto o número 1. O conjunto dos números naturais é composto pelos valores inteiros e positivos. Rejeitar a leitura de números inválidos (não pertencentes ao conjunto de números naturais). Ao final, permitir ao usuário verificar outros números ou encerrar. Rejeitar a leitura de valores inválidos – apenas 'S' para sim ou 'N' para não.
+
+
+Ex 5
+Ler um conjunto de salários e conceder reajustes de acordo com os seguintes critérios:
+- Salários inferiores a um mil reais, acréscimo de dez por cento
+- Salários entre um mil e dois mil reais, acréscimo de oito por cento
+- Salários acima de dois mil reais, acréscimo de sete por cento
+
+Para cada salário lido, calcular e escrever o percentual de reajuste e o valor do salário reajustado. Flag para finalização: salário igual a zero. Ao finalizar, deverá ser informado o salário médio após as correções salariais.
+
+
+Ex 6
+Uma empresa deseja reestruturar sua política de preços. Para atendê-la, construa um programa que leia o preço de um conjunto de n mercadorias, sendo n também um valor lido. O programa deverá calcular e escrever o maior preço dentre as mercadorias abaixo de dois mil reais e o maior preço dentre aquelas a partir de dois mil reais. Rejeitar a leitura de valores inválidos.
+
+
+Ex 7
+Para liquidar o estoque, uma empresa buscou uma promoção que possa atrair bastante os clientes. Para isso, elaborou uma política de descontos agressiva, concedendo um desconto de setenta por cento para itens com valores abaixo de quinhentos reais; de sessenta por cento para itens entre quinhentos e três mil reais e de cinquenta por cento para itens acima de três mil reais. Para cada valor lido, calcular e escrever o valor promocional, com o devido desconto. Flag para finalização: valor do item igual a zero.
+
+Lista 9 (Procedimentos e Funções)
+
+
+Ex 1
+Construa uma nova versão para o algoritmo que realize a soma de dois números reais. Nela, construa as seguintes funções:
+- uma função void que se encarrega de apresentar o programa na tela;
+- uma função float que gere um valor real lido do teclado;
+- uma função float que receba dois valores reais e gere a soma dos dois parâmetros recebidos;
+- uma função void que receba um valor real relativo ao resultado da soma e o escreva na tela;
+- uma função principal que se encarregue de estabelecer o fluxo das chamadas das funções acima para atender ao propósito desta questão.
+
+
+Ex 
+
+Construa uma função que receba a idade de uma pessoa e gere o número de dias por ela vividos até o seu último aniversário (fique à vontade para ignorar o impacto dos anos bissextos). Teste a função criada a partir da função principal.
+
+
+Ex 3
+Construa um programa que calcule a área de um retângulo. Planeje, com calma, cada uma das funções que deverão compor o programa: apresentação do objetivo do software; a leitura de cada um dos dados necessários para solucionar o problema (base e altura), rejeitando a leitura de valores negativos; o cálculo da área; a escrita do resultado e a função principal, encarregada de orquestrar o fluxo das chamadas para atender ao propósito desta questão.
+
+
+Ex 4
+Construa um programa que permita calcular o peso ideal de uma pessoa. Planeje com calma as funções necessárias para atender ao propósito da questão:
+- Uma função deverá fazer a apresentação na tela deste programa
+- Uma função char deverá ler e retornar o gênero [M/F]. Rejeitar a leitura de caracteres fora deste domínio. A função deverá garantir que o caractere retornado esteja em maiúsculo, independentemente da forma que ele foi digitado pelo usuário do programa
+- Uma função int deverá ler a idade. Rejeitar a leitura de valores negativos
+- Uma função float deverá receber dois parâmetros, o gênero e a idade. A partir da interpretação destes dois parâmetros, gerar um valor relativo ao peso ideal
+- Uma função void deverá receber um valor relativo ao resultado e escrever o peso ideal
+
+
+Ex 5
+Construa uma nova versão para o problema dos triângulos. Ela deverá conter as seguintes funções:
+- Uma função que verifique se os valores apresentados como lados do triângulo atendem ou não à condição para construir triângulos
+- Uma função que verifique o tipo do triângulo
+- Uma função que leia através do teclado o valor de um lado de um triângulo
+- Uma função que escreva na tela uma string relativa a um tipo do triângulo
+- Uma função que faça uma apresentação ao usuário
+- Uma função principal que gerencie o fluxo das chamadas às demais funções
+
+Lista 10 (Procedimentos e Funções)
+
+
+Ex 1
+Calcular o maior entre dois valores reais.
+
+
+Ex 2
+Calcular o perímetro de um quadrado.
+
+
+Ex 3
+Identificar se um inteiro é par ou ímpar.
+
+
+Ex 4
+Calcular o fatorial de um número natural.
+
+
+Ex 5
+Calcular a potenciação (não usar a classe Math).
+
+
+Ex 6
+Identificar se um número natural é primo ou não.
+
+Lista 11 (Ponteiros)
+
+
+Ex 
+
+Observe o código abaixo. Responda que valores serão escritos na tela após a execução.
+```c
+int a=5, b=2;
+troca(&a, &b);
+printf("\n%i, %i", a, b);
+
+void troca(int *x, int *y){
+    int aux;
+    aux = *x;
+    *x = *y;
+    *y = aux;
+}
+```
+
+
+Ex 2
+Crie uma nova versão para a questão que calcula o número de dias vividos por uma pessoa até o último aniversário. Modifique a função que implementa a leitura da idade pelo teclado. Nela, substitua a estratégia de retornar o valor lido pela seguinte: o valor lido deverá ser armazenado na variável parametrizada por referência. Teste a sua solução a partir da main().
+
+
+Ex 3
+Ler três valores reais. Calcular e escrever o segundo maior valor. Utilize a estratégia de ordenar os três valores lidos. O programa deverá conter, além da função principal, as seguintes outras:
+- uma função para ler um valor real;
+- uma função para ordenar três valores reais;
+- uma função para escrever o resultado (o segundo maior valor lido).
+
+Lista 12 (Alocação Dinâmica)
+
+
+Ex 1
+Construa uma versão para o algoritmo da soma de dois números. Nele, considere proibido o uso de variáveis simples. Em toda a solução, deve ser utilizada a alocação dinâmica de memória.
+
+
+Ex 2
+Construa uma versão para a questão anterior dividindo o seu programa em uma função para cada funcionalidade requerida, utilizando ponteiros para obter a passagem de parâmetro por referência:
+- função para ler um valor real;
+- função para somar dois valores reais;
+- função para escrever o resultado
+
+
+Ex 3
+Escreva uma função chamada teste que recebe um valor n passado "por valor" e dois inteiros b e k passados "por referência". Sua função deve representar em b e k valores tais que b^k = n e b seja o menor possível.
+
+
+Ex 4
+Faça uma função chamada primo que recebe como parâmetro um inteiro m, passado por valor, e dois outros inteiros, p1 e p2, passados por referência. A função deve representar em p1 o maior número primo menor do que m e deve representar em p2 o menor número primo maior do que m.
+
+Lista 13 (Recursão)
+
+
+Ex 1
+Construa uma função recursiva que escreva na tela a sequência abaixo:
+1, 2, 3, 4, 5,
+
+
+Ex 2
+Construa uma função recursiva que escreva na tela a sequência abaixo:
+1, 2, 3, 4, 5, 5, 4, 3, 2, 1,
+
+
+Ex 3
+Construa uma versão da função anterior de forma que os limites inferior e superior sejam parametrizados.
+
+
+Ex 4
+Construa uma função recursiva que escreva em ordem decrescente os inteiros de N até 0.
+
+
+Ex 5
+Crie uma função recursiva que calcule a soma dos números inteiros de n até m, sendo n e m limites inferior e superior, respectivamente.
+
+
+Ex 6
+Crie uma versão recursiva para o algoritmo que trata o problema do cálculo da potenciação.
+
+
+Ex 7
+Crie uma função recursiva que calcule o fatorial de um número natural N.
+
+Lista 14 (Recursão Avançada)
+
+
+Ex 1
+Construa algoritmos para calcular o k-ésimo termo Fibonacci utilizando as abordagens abaixo:
+a) Algoritmo recursivo
+b) Algoritmo iterativo
+
+
+Ex 2
+Construa uma versão recursiva da função de Ackerman, válida para valores inteiros e não negativos de m e n:
+n + 1, para m=0
+A(m, n) = A(m-1, 1), para m>0 e n=0
+A(m-1, A(m, n-1)), para m>0 e n>0
+
+
+Ex 3
+Resolva o problema das Torres de Hanói usando uma função recursiva com quatro parâmetros:
+1. O número de discos a serem movidos
+2. O pino no qual esses discos estão colocados inicialmente
+3. O pino para o qual essa pilha de discos deve ser movida
+4. O pino a ser usado como área de armazenamento temporário
+
+Lista 15 (Arquivos)
+
+
+Ex 
+
+Construa um programa que crie um arquivo com o nome "exemplo.dat". Feche-o. Acesse a pasta em que se encontra o seu código fonte (.c). Observe a existência do arquivo criado. Abra-o através do bloco de notas e verifique o seu conteúdo.
+
+
+Ex 
+
+Acrescente ao programa acima as seguintes instruções: Abra o arquivo "exemplo.dat" com permissão para escrita (gravação). Escreva no arquivo um valor inteiro relativo à sua idade. Feche o arquivo. Verifique pelo sistema operacional (via bloco de notas) o conteúdo do arquivo.
+
+
+Ex 3
+Acrescente ao programa acima as seguintes instruções: Abra o arquivo novamente com permissão para escrever ao final do arquivo, acrescentando a ele mais dados. Acrescente ao arquivo a idade de seu pai e a idade de sua mãe. Feche o arquivo.
+
+
+Ex 4
+Acrescente ao programa acima as seguintes instruções: Abra o arquivo novamente com permissão para leitura. Em seguida, leia e escreva na tela cada um dos três valores nele gravados. Feche o arquivo.
+
+
+Ex 5
+Construa um programa que calcule a quantidade de alunos com idade acima da idade média da turma. As idades lidas deverão ser armazenadas no arquivo "idade.dat". Flag para finalização: idade igual a zero.
+
+
+Ex 6
+Um programa deverá oferecer o seguinte menu de opções:
+0 - Sair do programa
+1 - Cadastrar senha
+2 - Validar senh
+
+Ao digitar a senha, o caractere digitado não deverá ser exibido na tela (usar asteriscos).
+
+
+Ex 7
+Construa uma função que receba um ponteiro do tipo FILE que aponta para um arquivo com um conjunto de valores do tipo real. A função deverá calcular e retornar a amplitude dos valores nele armazenado.
+
+Lista 16 (Vetores)
+
+
+Ex 1
+Considere uma turma com N alunos, sendo N um valor lido. Para cada aluno, ler a nota obtida em uma avaliação de valor igual a 100. Ao final das leituras, calcular e escrever a nota média da turma e o número de alunos com nota superior à nota média da turma.
+
+
+Ex 2
+Construa uma nova versão para o problema anterior de forma que, ao final das leituras, também sejam informadas a maior e a menor nota da turma.
+
+
+Ex 3
+Construa uma nova versão para o problema anterior de forma que, ao final das leituras, também seja informada a menor nota entre os alunos aprovados. Sabe-se que a nota mínima para aprovação é igual ou superior a sessenta pontos.
+
+
+Ex 4
+Construa uma nova versão para o problema anterior de forma que, ao final das leituras, sejam informados os percentuais de alunos aprovados e de alunos reprovados.
+
+
+Ex 5
+Construa uma nova versão para o problema anterior substituindo a estratégia da leitura do tamanho da turma por um controle implementado por flag: a leitura deverá ser interrompida quando uma nota negativa for lida. Para isto considere um ambiente que permita turmas com tamanho máximo igual a 100 alunos.
+
+Lista 17 (Manipulação de Vetores)
+
+
+Ex 1
+Construa uma função que receba um arranjo de reais e o seu tamanho. A função deverá trocar o primeiro elemento do arranjo com o último.
+
+
+Ex 2
+Construa uma função que receba um arranjo de reais e o seu tamanho. A função deverá trocar dois elementos de lugar. As duas posições deverão também ser parametrizadas.
+
+
+Ex 3
+Construa uma função que receba um arranjo de reais e desloque o maior valor de arranjo para a última posição.
+
+
+Ex 4
+Construa uma função que receba um arranjo de reais e desloque o menor valor de arranjo para a primeira posição.
+
+
+Ex 5
+Construa uma função que receba um arranjo de reais e o ordene em ordem crescente.
+
+
+Ex 6
+Construa uma função que receba um valor inteiro relativo a um mês do ano [1..12]. A função deverá retornar o número de dias que o mês possui.
+
+Lista 18 (Strings)
+
+
+Ex 1
+Construa uma função que receba uma string. A função deverá gerar o tamanho da string.
+
+
+Ex 2
+Construa uma função que receba uma string. A função deverá gerar o número de vogais nela presentes.
+
+
+Ex 3
+Construa uma função que receba uma string e um arranjo de inteiros de tamanho igual a cinco. A função deverá preencher o vetor de inteiros com o número da vogal correspondente, considerando a seguinte sequência: 'a' na posição 0, 'e' na posição 1 e assim sucessivamente.
+
+
+Ex 4
+Construa uma função que receba três strings. A função deverá concatenar as duas primeiras strings na terceira.
+
+
+Ex 5
+Construa uma função que receba duas strings. A função deverá retornar se são elas iguais ou não.
+
+Lista 19 (Matrizes)
+
+
+Ex 1
+Implemente a função para realizar a leitura dos valores para uma matriz bidimensional.
+
+
+Ex 2
+Implemente uma função que receba duas matrizes de reais. A função deverá copiar a primeira matriz na segunda.
+
+
+Ex 3
+Implemente a função que verifica se duas matrizes bidimensionais são iguais ou não.
+
+
+Ex 4
+Implemente uma função que receba duas matrizes de reais. A função deverá calcular a matriz transposta da primeira, armazenando-a na segunda matriz.
+
+Lista 20 (Matrizes Avançado)
+
+
+Ex 1
+Proponha uma versão eficiente para uma função que verifique a igualdade entre duas matrizes, utilizando alguma estratégia que reduza seu custo de tempo.
+
+
+Ex 2
+Construa uma função que verifique o número de ocorrências da chave de pesquisa em uma matriz de reais.
+
+
+Ex 3
+Construa uma função que implemente um algoritmo de pesquisa em uma matriz de reais.
+
+
+Ex 4
+Construa uma função que calcule a média dos valores posicionados acima da diagonal principal de uma matriz quadrada.
+
+Lista 21 (Recursão com Vetores/Matrizes)
+
+
+Ex 1
+Construa uma função que receba uma string e calcule seu tamanho:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 2
+Construa uma função que receba um arranjo bidimensional de reais e retorne o maior valor presente em sua diagonal principal:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 3
+Construa uma função que receba uma matriz quadrada de reais e verifique em que posição da matriz se encontra o menor valor:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 4
+Construa uma função que escreva os valores que compõem sua diagonal secundária:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+Lista 22 (Recursão com Vetores/Matrizes II)
+
+
+Ex 1
+Implemente uma função que receba um arranjo unidimensional de reais e o inverta:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 2
+Construa uma função que verifique se é uma palavra um palíndromo ou não:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 3
+Implemente uma função que receba uma matriz de reais e retorne em qual linha da matriz está a primeira ocorrência do maior valor nela presente:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+
+Ex 4
+Construa uma função que receba uma matriz de reais e um vetor de reais. Cada elemento do vetor deverá armazenar a soma dos valores da respectiva coluna da matriz:
+a) Abordagem iterativa
+b) Abordagem recursiva
+
+Lista 23 (Estruturas/Registros)
+
+
+Ex 1
+Uma pessoa é descrita pelos seguintes dados:
+- nome da pessoa - uma string com tamanho igual a 50 caracteres
+- idade, um valor inteiro
+
+Declare, no escopo global, o tipo Pessoa. Na função principal, declarar um arranjo de alunos do tipo Pessoa. A partir da função principal, um menu deverá prover as seguintes funcionalidades:
+- Cadastrar um aluno
+- Listar todos os alunos cadastrados
+- Informar a idade média da turma
+
+
+Ex 2
+Assegure que as funcionalidades previstas no menu estejam implementadas em funções específicas para cada caso.
+
+Lista 24 (Orientação a Objetos)
+
+
+Ex 1
+Considere o tipo Quadrado descrito com o seguinte dado:
+- Lado, um atributo do tipo real
+
+E as seguintes operações:
+- Atribuir um valor parametrizado ao atributo Lado; Rejeitar valor negativo;
+- Recuperar o valor do atributo Lado;
+- Gerar o perímetro do quadrado;
+- Gerar a área do quadrado;
+- Ler um valor do teclado e guardá-lo no atributo Lado;
+- Escreva na tela do monitor de vídeo o valor atribuído ao atributo Lado.
+
+Na função principal:
+Criar uma instância de quadrado e:
+- nela guardar o valor do lado fornecido pelo usuário;
+- escrever na tela seu perímetro;
+- escrever na tela sua área.
+
+Lista 25 (OO Avançado)
+
+
+Ex 1
+Considere a classe Quadrado com atributos e métodos:
+- lado : real
+- cor : string
+- métodos: setLado(), getLado(), setCor(), getCor(), perimetro(), area(), leia(), escreva()
+
+A função principal deverá permitir:
+- Criar instâncias de Quadrado
+- Usar ponteiros para Quadrado
+- Criar vetor de ponteiros para quadrados
+- Menu com opções: Inserir e Listar Quadrados
+
+
+Ex 2
+Implemente um sistema com herança para figuras geométricas (classe base FigGeo e classes derivadas Circulo, Quadrado, Triangulo). Crie um arranjo de ponteiros para figuras geométricas e implemente um menu para cadastrar e listar figuras de cada tipo, mostrando seus atributos e cálculos específicos (área, perímetro).

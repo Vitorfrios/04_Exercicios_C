@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Chat System - IA Gratuita</title>
+    <link rel="stylesheet" href="/static/css/widgets.css">
+    <link rel="stylesheet" href="static/css/enhanced-styles.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: white;
+            text-align: center;
+        }
+        .hero {
+            background: rgba(255,255,255,0.1);
+            padding: 60px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        .status-card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .credential-box {
+            background: rgba(0,0,0,0.3);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px auto;
+            max-width: 400px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="hero">
+            <h1>🚀 Chat System</h1>
+            <p style="font-size: 1.3em; opacity: 0.9;">Sistema completo de chat com IA 100% gratuita</p>
+            
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>✅ Servidor</h3>
+                    <p>FastAPI Online</p>
+                </div>
+                <div class="status-card">
+                    <h3>🗄️ Banco de Dados</h3>
+                    <p>SQLite Conectado</p>
+                </div>
+                <div class="status-card">
+                    <h3>🤖 IA Gratuita</h3>
+                    <p>Groq API Pronta</p>
+                </div>
+                <div class="status-card">
+                    <h3>🎯 Widgets</h3>
+                    <p>Interface Ativa</p>
+                </div>
+            </div>
+
+            <div class="credential-box">
+                <h3>🔐 Credenciais de Desenvolvedor</h3>
+                <p><strong>Usuário:</strong> admin</p>
+                <p><strong>Senha:</strong> admin123</p>
+                <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">
+                    Use estas credenciais no widget 🔧 (canto inferior esquerdo)
+                </p>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <h3>Como usar:</h3>
+                <p>1. Clique no botão 💬 (canto inferior direito) para chat de usuário</p>
+                <p>2. Clique no botão 🔧 (canto inferior esquerdo) para modo desenvolvedor</p>
+                <p>3. Use as credenciais acima para login no widget dev</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widgets serão injetados aqui -->
+    <script src="static/js/response-handler.js"></script>
+    <script src="static/js/analysis-tools.js"></script>
+    <script src="static/js/user-widget.js"></script>
+    <script src="static/js/dev-widget.js"></script>
+
+    <script>
+        console.log('🚀 Chat System - Interface carregada!');
+        console.log('💬 Widget Usuário: canto inferior direito');
+        console.log('🔧 Widget Dev: canto inferior esquerdo');
+    </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
-# ia_services.py - CORRIGIDO
+# ia_services.py - IA COM RESPOSTAS PRECISAS E INTELIGENTES
 import os
-import re
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -10,403 +9,265 @@ class IAService:
     def __init__(self):
         self.groq_key = os.environ.get("GROQ_API_KEY")
         self.use_real_ia = bool(self.groq_key)
-        self.conversation_threads = {}  # ✅ Threads de conversação por usuário
-        
+
         if self.use_real_ia:
             self.client = OpenAI(
+                base_url="https://api.groq.com/openai/v1",
                 api_key=self.groq_key,
-                base_url="https://api.groq.com/openai/v1"
             )
-            print("✅ IA Groq - Conversação Contínua Ativa")
+            print("✅ IA Groq - Respostas Inteligentes Ativas")
         else:
-            print("⚠️  Modo MOCK - Conversação Contínua")
+            self.client = None
+            print("❌ GROQ_API_KEY não configurada")
 
-    def dev_chat(self, messages, user_id="dev", action_type=None):
-        """Chat Dev com conversação contínua - MELHORADO"""
-        # ✅ Mantém thread de conversação
-        thread_id = f"dev_{user_id}"
-        if thread_id not in self.conversation_threads:
-            self.conversation_threads[thread_id] = []
-        
-        # Adiciona nova mensagem ao thread
-        if messages:
-            self.conversation_threads[thread_id].extend(messages[-2:])  # Mantém últimas 2
-        
-        # Limita o tamanho do thread
-        if len(self.conversation_threads[thread_id]) > 20:
-            self.conversation_threads[thread_id] = self.conversation_threads[thread_id][-20:]
-        
-        # Busca análise REAL do código
-        from code_analyzer import code_analyzer
-        analise_real = code_analyzer.analyze_project()
-        
-        # Prepara contexto inteligente
-        contexto_acao = self._get_continuous_context(action_type, messages, analise_real, thread_id)
-        
-        system_context = f"""
-        VOCÊ É UM ENGENHEIRO ESPECIALISTA EM CONVERSAÇÕES TÉCNICAS CONTÍNUAS.
-
-        CONTEXTO DO SISTEMA:
-        {self._format_real_analysis(analise_real)}
-
-        {contexto_acao}
-
-        SEU ESTILO DE CONVERSA:
-        - Mantenha a conversa fluida e contínua
-        - Não "feche" os tópicos - sempre permita continuação
-        - Use perguntas retóricas para engajar
-        - Ofereça aprofundamento natural
-        - Seja técnico mas acessível
-
-        EXEMPLOS DE RESPOSTAS CONTÍNUAS:
-        "Analisando esse aspecto mais a fundo..." 
-        "Quer que eu detalhe alguma parte específica?"
-        "Vamos explorar isso melhor..."
-        "Algum ponto em particular você gostaria de expandir?"
-
-        EVITE:
-        - "Passo 1, 2, 3..." (muito robótico)
-        - Encerrar tópicos abruptamente
-        - Listas muito longas sem engajamento
-        """
-
-        # Usa o thread completo para contexto
-        full_messages = self.conversation_threads[thread_id].copy()
-        
-        return self._continuous_groq_chat(full_messages, system_context, action_type)
-
-    def _get_continuous_context(self, action_type, messages, analise_real, thread_id):
-        """Contexto para conversação contínua - MELHORADO"""
-        if not action_type:
-            return "Continue a conversa naturalmente, permitindo aprofundamento nos tópicos."
-        
-        # Verifica se é continuação de ação anterior
-        last_action = getattr(self, f'_last_action_{thread_id}', None)
-        setattr(self, f'_last_action_{thread_id}', action_type)
-
-        
-        action_contexts = {
-            "detailed_analysis": f"""
-            CONTINUAÇÃO DA ANÁLISE DETALHADA:
-            {f'Continuação do tópico anterior: {last_action}' if last_action == 'detailed_analysis' else 'Iniciando análise detalhada...'}
-            
-            Mantenha a análise fluida e aprofundável. 
-            Convide para explorar aspectos específicos.
-            Ofereça diferentes ângulos de análise.
-            """,
-            
-            "debug": f"""
-            CONTINUAÇÃO DO DEBUG:
-            {f'Continuando debug do problema anterior' if last_action == 'debug' else 'Iniciando análise de debug...'}
-            
-            Explore os problemas de forma conversacional.
-            Peça mais contexto se necessário.
-            Sugira próximos passos naturalmente.
-            """,
-            
-            "practical_example": f"""
-            CONTINUAÇÃO DO EXEMPLO PRÁTICO:
-            {f'Expandindo o exemplo anterior' if last_action == 'practical_example' else 'Criando exemplo prático...'}
-            
-            Desenvolva o exemplo de forma incremental.
-            Peça feedback sobre a implementação.
-            Ofereça variações do exemplo.
-            """,
-            
-            "performance": f"""
-            CONTINUAÇÃO DA ANÁLISE DE PERFORMANCE:
-            {f'Aprofundando análise de performance' if last_action == 'performance' else 'Iniciando análise de performance...'}
-            
-            Explore métricas de forma conversacional.
-            Compare diferentes abordagens.
-            Peça contexto sobre casos de uso específicos.
-            """
-        }
-        
-        return action_contexts.get(action_type, "Continue a conversa técnica de forma natural.")
-
-    def _continuous_groq_chat(self, messages, system_context, action_type):
-        """Chat com foco em continuidade - NOVO"""
+    def dev_chat(self, messages, action_type=None):
+        """IA que analisa código real e responde com precisão"""
         if not self.use_real_ia:
-            return self._continuous_mock_response(messages, system_context, action_type)
+            return self._get_smart_fallback_response(messages)
         
         try:
-            system_msg = {"role": "system", "content": system_context}
-            full_messages = [system_msg] + messages
+            # Análise em tempo real do código
+            real_context = self._get_real_time_context()
+            user_message = self._get_last_user_message(messages)
+            
+            # Sistema que entende o código profundamente
+            system_prompt = self._create_deep_system_prompt(real_context)
             
             response = self.client.chat.completions.create(
                 model="llama-3.1-8b-instant",
-                messages=full_messages,
-                temperature=0.7,  # Mais criativo para conversação
-                max_tokens=600,
-                timeout=15
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.4,
+                max_tokens=1200,
+                timeout=25,
             )
             
-            content = response.choices[0].message.content
-            return self._format_continuous_response(content, action_type)
-            
+            return response.choices[0].message.content
+
         except Exception as e:
-            print(f"❌ Erro Groq: {e}")
-            return self._continuous_mock_response(messages, system_context, action_type)
+            print(f"❌ Erro IA inteligente: {e}")
+            return self._analyze_and_respond_offline(messages)
 
-    def _format_continuous_response(self, text, action_type):
-        """Formata resposta para incentivar continuidade - NOVO"""
-        if not text:
-            return "Gostaria de explorar mais algum aspecto específico?"
-        
-        # Remove fechamentos muito definitivos
-        text = re.sub(r'(em conclusão|finalmente|para resumir|em suma)[^.!?]*[.!?]', '', text, flags=re.IGNORECASE)
-        
-        # Adiciona engajamento se a resposta for muito "fechada"
-        if not any(word in text.lower() for word in ['?', 'quer', 'gostaria', 'vamos', 'explorar', 'detalhar']):
-            engagement_phrases = [
-                "\n\nO que achou dessa abordagem?",
-                "\n\nQuer que eu detalhe algum ponto específico?",
-                "\n\nVamos explorar isso mais a fundo?",
-                "\n\nAlguma parte em particular te interessa mais?"
-            ]
+    def _get_real_time_context(self):
+        """Obtém contexto REAL em tempo real do sistema"""
+        try:
+            from code_analyzer import code_analyzer
             
-            import random
-            text += random.choice(engagement_phrases)
-        
-        # Limpa HTML
-        text = re.sub(r'</?strong>', '**', text)
-        text = re.sub(r'</?code>', '`', text)
-        text = re.sub(r'<[^>]+>', '', text)
-        
-        return text
-
-    def _continuous_mock_response(self, messages, system_context, action_type):
-        """Mock responses que incentivam continuidade - MELHORADO"""
-        last_msg = messages[-1]['content'].lower() if messages else ""
-        
-        if "dev" in system_context.lower():
-            continuous_responses = {
-                "detailed_analysis": [
-                    "🔍 **Análise em Andamento:** Identifiquei alguns padrões interessantes na arquitetura. Quer que eu foque em algum componente específico como o sistema de autenticação ou a estrutura do banco?",
-                    
-                    "📊 **Profundizando Análise:** Analisando o tratamento de erros, vejo oportunidades em auth.py. Como você lida atualmente com falhas de autenticação? Podemos explorar isso.",
-                    
-                    "🔄 **Continuação da Análise:** Vamos olhar para a performance das queries SQLite? Ou prefere focar na escalabilidade da API? Me diga qual aspecto te interessa mais."
-                ],
-                
-                "debug": [
-                    "🐛 **Debug Contínuo:** Encontrei alguns pontos de melhoria no tratamento de exceções. Quer que eu mostre como implementar logs mais detalhados?",
-                    
-                    "🔧 **Aprofundando Debug:** Analisando o fluxo de autenticação, há oportunidades para melhorar a validação. Como você monitora tentativas de login atualmente?",
-                    
-                    "⚡ **Debug em Progresso:** Vamos examinar o consumo de memória do sistema? Ou prefere focar em otimização de consultas? Me oriente sobre sua prioridade."
-                ],
-                
-                "practical_example": [
-                    "📝 **Exemplo Expandido:** Aqui está uma implementação básica. Quer que eu adicione tratamento de erros ou prefere ver uma versão com cache?",
-                    
-                    "🚀 **Desenvolvendo Exemplo:** Vamos evoluir esse código juntos? Posso mostrar como adicionar logging, métricas ou testes unitários. O que te interessa?",
-                    
-                    "💡 **Exemplo em Camadas:** Esta é a versão simples. Quer ver como escalar para produção com rate limiting e monitoramento?"
-                ],
-                
-                "performance": [
-                    "⚡ **Análise de Performance Contínua:** Identifiquei oportunidades em consultas SQL. Quer que eu mostre como adicionar índices ou prefere otimização de conexões?",
-                    
-                    "📈 **Métricas em Foco:** Vamos explorar métricas específicas? Posso ajudar com monitoramento de tempo de resposta, throughput ou uso de recursos. Qual sua necessidade?",
-                    
-                    "🔍 **Performance Profunda:** Analisando o sistema, vejo potencial em cache. Quer implementar cache em memória ou prefere focar em otimização de algoritmos?"
-                ]
+            analysis = code_analyzer.analyze_project()
+            current_issues = self._extract_current_issues(analysis)
+            project_structure = self._get_project_structure()
+            
+            return {
+                'current_issues': current_issues,
+                'structure': project_structure,
+                'analysis_data': analysis
             }
             
-            import random
-            responses = continuous_responses.get(action_type, [
-                "💭 Interessante! Como posso ajudar você a explorar isso mais a fundo?",
-                "🔍 Vamos continuar essa análise? Em que aspecto específico você gostaria de se aprofundar?",
-                "🚀 Ótimo ponto! Quer que eu detalhe alguma parte específica ou explore uma abordagem diferente?"
-            ])
-            
-            return random.choice(responses)
-        else:
-            # Respostas contínuas para usuário
-            return "🤖 Como posso continuar ajudando você? Tem alguma dúvida específica ou quer explorar outra funcionalidade?"
-    def user_chat(self, messages, user_id="user"):
-        """Chat Usuário Inteligente - CORRIGIDO"""
-        system_context = """
-        VOCÊ É UM ASSISTENTE DO CHAT SYSTEM.
-
-        SOBRE ESTE SISTEMA:
-        - Site de chat com IA gratuita
-        - Dois widgets: 💬 (ajuda geral) e 🔧 (análise técnica)
-        - Desenvolvido com FastAPI, SQLite e JavaScript
-        - IA integrada com Groq API
-
-        SUAS FUNÇÕES:
-        - Explicar como o sistema funciona
-        - Ajudar a usar os recursos disponíveis
-        - Responder perguntas técnicas básicas
-        - Direcionar para análise técnica quando necessário
-
-        CREDENCIAIS DEV: admin / admin123
-
-        ESTILO:
-        - Respostas úteis e diretas (100-200 palavras)
-        - Tom amigável e profissional
-        - Use emojis moderadamente
-        - Ofereça ajuda adicional
-        """
-
-        return self._smart_groq_chat(messages, system_context)
-
-    def _get_smart_action_context(self, action_type, messages, analise_real):
-        """Gera contexto inteligente para ações - CORRIGIDO"""
-        if not action_type:
-            return "Forneça ajuda técnica geral baseada na conversa."
-        
-        # Pega a última mensagem do usuário para contexto
-        ultima_user_msg = ""
-        for msg in reversed(messages):
-            if msg['role'] == 'user':
-                ultima_user_msg = msg['content']
-                break
-        
-        action_contexts = {
-            "detailed_analysis": f"""
-            O usuário solicitou uma ANÁLISE DETALHADA.
-            
-            Contexto da conversa: {ultima_user_msg[:200] if ultima_user_msg else "Conversa geral"}
-            
-            Forneça uma análise técnica aprofundada incluindo:
-            - Arquitetura e estrutura do código
-            - Problemas identificados na análise real
-            - Recomendações de melhoria
-            - Impacto nas funcionalidades
-            """,
-            
-            "debug": f"""
-            O usuário solicitou DEBUG técnico.
-            
-            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Sistema geral"}
-            
-            Foque em:
-            - Identificar e explicar possíveis bugs
-            - Sugerir correções específicas
-            - Melhorar tratamento de erros
-            - Logs e monitoramento
-            """,
-            
-            "practical_example": f"""
-            O usuário solicitou um EXEMPLO PRÁTICO.
-            
-            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Implementação geral"}
-            
-            Forneça:
-            - Código implementável e testável
-            - Exemplo concreto relacionado ao contexto
-            - Explicação passo a passo
-            - Boas práticas aplicadas
-            """,
-            
-            "performance": f"""
-            O usuário solicitou análise de PERFORMANCE.
-            
-            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Otimização geral"}
-            
-            Analise:
-            - Possíveis gargalos de performance
-            - Otimizações específicas
-            - Melhorias de consulta e cache
-            - Métricas e monitoramento
-            """
-        }
-        
-        return action_contexts.get(action_type, "Forneça ajuda técnica geral.")
-
-    def _format_real_analysis(self, analise):
-        """Formata a análise real para contexto"""
-        partes = []
-        
-        if analise['duplicate_functions']:
-            for dup in analise['duplicate_functions'][:2]:
-                if dup['function'] != '__init__':  # Ignora __init__
-                    partes.append(f"🚨 {dup['function']} em {dup['file1']} e {dup['file2']}")
-        
-        if analise['error_handling']:
-            for err in analise['error_handling'][:2]:
-                partes.append(f"⚠️ {err['file']}: {err['issue']}")
-        
-        if analise['security_issues']:
-            for sec in analise['security_issues'][:2]:
-                partes.append(f"🔒 {sec['file']}: {sec['issue']}")
-        
-        return "\n".join(partes) if partes else "✅ Código estável"
-
-    def _smart_groq_chat(self, messages, system_context):
-        """Chat inteligente com fallback elegante - CORRIGIDO"""
-        if not self.use_real_ia:
-            return self._smart_mock_response(messages, system_context)
-        
-        try:
-            system_msg = {"role": "system", "content": system_context}
-            full_messages = [system_msg] + messages
-            
-            response = self.client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=full_messages,
-                temperature=0.3,
-                max_tokens=800,
-                timeout=15
-            )
-            
-            content = response.choices[0].message.content
-            return self._clean_response(content)
-            
         except Exception as e:
-            print(f"❌ Erro Groq: {e}")
-            return self._smart_mock_response(messages, system_context)
+            return {
+                'current_issues': ['Erro na análise: ' + str(e)],
+                'structure': {},
+                'analysis_data': {}
+            }
 
-    def _smart_mock_response(self, messages, system_context):
-        """Resposta mock inteligente - CORRIGIDO"""
-        ultima_msg = messages[-1]['content'].lower() if messages else ""
+    def _extract_current_issues(self, analysis):
+        """Extrai problemas atuais do código"""
+        issues = []
         
-        if "dev" in system_context.lower():
-            # Respostas mock melhoradas baseadas no contexto
-            if "análise detalhada" in ultima_msg or "detailed_analysis" in str(messages):
-                return "🔍 **Análise Detalhada:** O sistema mostra boa arquitetura. Melhore o tratamento de erros em auth.py. Configure GROQ_API_KEY para análise completa."
+        # Duplicatas REAIS
+        duplicates = [d for d in analysis.get('duplicate_functions', []) 
+                     if d.get('function') != '__init__']
+        for dup in duplicates[:3]:
+            issues.append(f"DUPLICATA: {dup.get('function')} em {dup.get('file1')} e {dup.get('file2')}")
+        
+        # Erros de tratamento
+        if analysis.get('error_handling'):
+            for err in analysis['error_handling'][:2]:
+                issues.append(f"ERRO: {err.get('file')} - {err.get('issue')}")
+        
+        return issues
+
+    def _get_project_structure(self):
+        """Estrutura real do projeto"""
+        return {
+            'backend': 'FastAPI + SQLite',
+            'frontend': 'JavaScript Vanilla + Widgets',
+            'core_files': [
+                'app.py', 'auth.py', 'chat_services.py', 'database.py', 
+                'routes.py', 'ia_services.py', 'code_analyzer.py'
+            ],
+            'widgets': ['user-widget.js', 'dev-widget.js', 'response-handler.js']
+        }
+
+    def _create_deep_system_prompt(self, context):
+        """Cria prompt inteligente que entende o código profundamente"""
+        
+        issues_text = "\n".join(context['current_issues']) if context['current_issues'] else "Nenhum problema crítico"
+        
+        return f"""
+Você é um engenheiro sênior analisando este sistema específico.
+
+SISTEMA ANALISADO:
+- FastAPI + SQLite + JavaScript vanilla
+- Arquivos principais: {', '.join(context['structure']['core_files'])}
+- Widgets: {', '.join(context['structure']['widgets'])}
+
+PROBLEMAS ATUAIS IDENTIFICADOS:
+{issues_text}
+
+VOCÊ TEM ACESSO COMPLETO AO CÓDIGO E PODE:
+- Analisar funções específicas
+- Verificar erros em tempo real  
+- Sugerir correções baseadas no código real
+- Explicar como o sistema funciona
+- Diagnosticar problemas técnicos
+
+SEJA DIRETO E PRECISO:
+- Não invente arquivos ou funções
+- Baseie-se apenas no código existente
+- Dê exemplos reais quando possível
+- Foque na pergunta específica do usuário
+
+O usuário está interagindo com o sistema AGORA e precisa de ajuda real.
+"""
+
+    def _get_last_user_message(self, messages):
+        """Pega a última mensagem do usuário com contexto"""
+        user_messages = [msg for msg in messages if msg["role"] == "user"]
+        return user_messages[-1]["content"] if user_messages else "Analisar o sistema"
+
+    def _analyze_and_respond_offline(self, messages):
+        """Análise offline inteligente quando IA não está disponível"""
+        try:
+            from code_analyzer import code_analyzer
+            analysis = code_analyzer.analyze_project()
             
-            elif "debug" in ultima_msg:
-                return "🐛 **Debug:** Verifique funções sem tratamento de erro em auth.py. Logs ajudariam no monitoramento. Configure GROQ_API_KEY para debug detalhado."
+            user_message = self._get_last_user_message(messages).lower()
             
-            elif "exemplo prático" in ultima_msg or "practical_example" in str(messages):
-                return "📝 **Exemplo Prático:** ```python\n# Melhoria em auth.py\ntry:\n    user = get_user(username)\nexcept Exception as e:\n    logger.error(f'Auth error: {e}')\n    return None\n```"
-            
-            elif "performance" in ultima_msg:
-                return "⚡ **Performance:** SQLite é adequado para testes. Para produção, considere PostgreSQL. Otimize consultas frequentes."
-            
+            # Respostas contextuais baseadas na análise real
+            if 'duplicad' in user_message or 'duplicat' in user_message:
+                return self._format_duplicates_response(analysis)
+            elif 'erro' in user_message or 'error' in user_message:
+                return self._format_errors_response(analysis)
+            elif 'sessão' in user_message or 'session' in user_message:
+                return self._format_session_response()
             else:
-                return "💡 Configure GROQ_API_KEY no .env para respostas técnicas completas e contextualizadas."
-        else:
-            # Respostas para usuário
-            if "funcion" in ultima_msg or "como" in ultima_msg:
-                return "🤖 Este é um sistema de chat com IA gratuita. Use 💬 para ajuda geral ou 🔧 para análise técnica (login: admin/admin123)."
-            elif "ajuda" in ultima_msg or "help" in ultima_msg:
-                return "💬 Posso ajudar! Este sistema permite conversar com IA. Para questões técnicas, use o widget 🔧."
-            else:
-                return "Olá! Sou o assistente deste sistema de chat. Como posso ajudar?"
+                return self._format_general_analysis(analysis)
+                
+        except Exception as e:
+            return "🔧 Estou analisando seu sistema FastAPI + SQLite. Para respostas detalhadas, configure a GROQ_API_KEY."
 
-    def _clean_response(self, text):
-        """Limpa resposta mantendo qualidade"""
-        if not text: 
-            return "Resposta não disponível."
+    def _format_duplicates_response(self, analysis):
+        """Resposta inteligente sobre duplicatas"""
+        duplicates = [d for d in analysis.get('duplicate_functions', []) 
+                     if d.get('function') != '__init__']
         
-        # Remove HTML mas mantém formatação
-        text = re.sub(r'</?strong>', '**', text)
-        text = re.sub(r'</?code>', '`', text)
-        text = re.sub(r'<[^>]+>', '', text)
+        if not duplicates:
+            return "✅ Não encontrei funções duplicadas significativas no código."
         
-        # Limita tamanho mas preserva estrutura
-        if len(text) > 1000:
-            paragraphs = text.split('\n\n')
-            if len(paragraphs) > 3:
-                text = '\n\n'.join(paragraphs[:3]) + "\n\n..."
+        response = ["🔍 **FUNÇÕES DUPLICADAS ENCONTRADAS:**"]
         
-        return text.strip()
+        for dup in duplicates[:3]:
+            func_name = dup.get('function', 'N/A')
+            file1 = dup.get('file1', 'N/A')
+            file2 = dup.get('file2', 'N/A')
+            response.append(f"• `{func_name}` - presente em `{file1}` e `{file2}`")
+        
+        response.append("\n💡 **SOLUÇÃO:** Unifique em `database.py` e remova de `chat_services.py`")
+        return "\n".join(response)
 
-# Instância global
+    def _format_errors_response(self, analysis):
+        """Resposta inteligente sobre erros"""
+        error_issues = analysis.get('error_handling', [])
+        
+        if not error_issues:
+            return "✅ O tratamento de erros parece adequado."
+        
+        response = ["⚠️ **FALTA TRATAMENTO DE ERROS:**"]
+        
+        for err in error_issues[:3]:
+            response.append(f"• `{err.get('file')}`: {err.get('issue')}")
+        
+        response.append("\n💡 **SOLUÇÃO:** Adicione try/except nas funções principais")
+        return "\n".join(response)
+
+    def _format_session_response(self):
+        """Resposta sobre problemas de sessão"""
+        return """
+🔧 **ERRO DE SESSÃO DETECTADO:**
+
+O erro 500 ao deletar sessão indica um problema no backend.
+
+**CAUSA PROVÁVEL:**
+- Função `delete_dev_session` duplicada entre `chat_services.py` e `database.py`
+- Falta de tratamento de erro na rota DELETE
+
+**SOLUÇÃO IMEDIATA:**
+1. Use apenas `database.db.delete_dev_session()` 
+2. Remova a função duplicada de `chat_services.py`
+3. Adicione try/except na rota em `routes.py`
+
+**CÓDIGO CORRETO:**
+```python
+# routes.py - usar assim:
+success = database.db.delete_dev_session(session_id, user_id)
+"""
+
+def _format_general_analysis(self, analysis):
+    """Análise geral inteligente"""
+    duplicates = len([d for d in analysis.get('duplicate_functions', []) 
+                     if d.get('function') != '__init__'])
+    errors = len(analysis.get('error_handling', []))
+    
+    response = ["📊 **ANÁLISE DO SISTEMA:**"]
+    
+    if duplicates > 0:
+        response.append(f"• {duplicates} função(es) duplicada(s)")
+    if errors > 0:
+        response.append(f"• {errors} arquivo(s) com pouco tratamento de erro")
+    
+    if duplicates == 0 and errors == 0:
+        response.append("• ✅ Código bem estruturado")
+    
+    response.append("\n💡 **PRÓXIMOS PASSOS:** Configure GROQ_API_KEY para análise detalhada em tempo real.")
+    
+    return "\n".join(response)
+
+def _get_smart_fallback_response(self, messages):
+    """Resposta fallback inteligente"""
+    user_message = self._get_last_user_message(messages).lower()
+    
+    if 'erro' in user_message or 'error' in user_message:
+        return "🔧 Vejo que você tem um erro. Para diagnóstico preciso, configure GROQ_API_KEY. Enquanto isso, verifique se as funções delete_dev_session não estão duplicadas entre chat_services.py e database.py."
+    elif 'duplicad' in user_message:
+        return "🔍 Para análise de duplicatas, configure GROQ_API_KEY. Verifique funções com mesmo nome em arquivos diferentes."
+    else:
+        return "💡 Olá! Sou o assistente técnico do seu sistema. Configure GROQ_API_KEY para análises detalhadas em tempo real."
+
+def user_chat(self, messages, user_identifier="user"):
+    """Chat natural para usuários comuns"""
+    if not self.use_real_ia:
+        return "👋 Olá! Como posso ajudar você hoje?"
+    
+    try:
+        response = self.client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "Você é um assistente amigável e útil. Seja natural e responda de forma clara e direta."
+                },
+                {"role": "user", "content": messages[-1]["content"] if messages else "oi"}
+            ],
+            temperature=0.8,
+            max_tokens=300,
+            timeout=10,
+        )
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        return "👋 Olá! Em que posso ajudar?"
+
 ia_service = IAService()

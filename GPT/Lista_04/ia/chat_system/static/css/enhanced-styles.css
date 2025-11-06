@@ -471,3 +471,40 @@
     margin-right: auto;
     border-bottom-left-radius: 6px;
 }
+
+
+.ia-message {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    margin-right: auto;
+    border-bottom-left-radius: 6px;
+    white-space: pre-wrap;
+}
+
+.ia-message::before {
+    content: "";
+}
+
+/* força quebra de linha após cada ponto de tópico "•" */
+.ia-message {
+    word-break: break-word;
+}
+
+.ia-message p::after,
+.ia-message span::after {
+    content: "";
+}
+
+/* substitui cada "•" por "•" + quebra de linha */
+.ia-message {
+    white-space: pre-wrap;
+}
+
+.ia-message * {
+    display: block;
+}
+
+.ia-message {
+    unicode-bidi: plaintext;
+}

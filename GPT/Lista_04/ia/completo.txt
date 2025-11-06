@@ -1,0 +1,2851 @@
+
+/* ==== INÍCIO: analysis-tools.js ==== */
+// analysis-tools.js
+class AnalysisTools {
+    async analyzeQuery(message) {
+        return {
+            complexity: this.detectComplexity(message),
+            intent: this.detectIntent(message),
+            urgency: this.detectUrgency(message),
+            technicalDepth: this.detectTechnicalDepth(message),
+            topics: this.detectTopics(message)
+        };
+    }
+    
+    detectComplexity(message) {
+        const complexKeywords = ['bug', 'erro', 'otimização', 'performance', 'arquitetura'];
+        return complexKeywords.some(keyword => message.toLowerCase().includes(keyword)) ? 'high' : 'medium';
+    }
+    
+    detectIntent(message) {
+        if (message.includes('?')) return 'question';
+        if (message.includes('ajuda')) return 'help';
+        if (message.match(/não funciona|problema|erro/)) return 'debug';
+        return 'general';
+    }
+    
+    detectUrgency(message) {
+        const urgentWords = ['urgente', 'crítico', 'bloqueador', 'produção'];
+        return urgentWords.some(word => message.toLowerCase().includes(word)) ? 'high' : 'normal';
+    }
+    
+    detectTechnicalDepth(message) {
+        const techWords = ['api', 'endpoint', 'database', 'query', 'function', 'class'];
+        const count = techWords.filter(word => message.toLowerCase().includes(word)).length;
+        return count > 2 ? 'deep' : count > 0 ? 'medium' : 'shallow';
+    }
+    
+    detectTopics(message) {
+        const topics = {
+            'javascript': ['javascript', 'js', 'node', 'react', 'vue'],
+            'python': ['python', 'django', 'flask'],
+            'html': ['html', 'css', 'frontend'],
+            'database': ['sql', 'banco de dados', 'query'],
+            'api': ['api', 'rest', 'endpoint']
+        };
+        
+        const detectedTopics = [];
+        for (const [topic, keywords] of Object.entries(topics)) {
+            if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+                detectedTopics.push(topic);
+            }
+        }
+        
+        return detectedTopics;
+    }
+}
+/* ==== FIM: analysis-tools.js ==== */
+
+/* ==== INÍCIO: app.py ==== */
+# app.py - COM CAMINHO ABSOLUTO PARA TEMPLATES
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import uvicorn
+import os
+
+app = FastAPI(title="Chat System", version="1.0.0")
+
+# ✅ CAMINHO ABSOLUTO para templates
+current_dir = os.path.dirname(os.path.abspath(__file__))
+templates_dir = os.path.join(current_dir, "templates")
+
+print(f"📁 Procurando templates em: {templates_dir}")
+
+# Configura templates com caminho absoluto
+templates = Jinja2Templates(directory=templates_dir)
+
+# Cria pastas se não existirem
+os.makedirs("static/css", exist_ok=True)
+os.makedirs("static/js", exist_ok=True)
+
+# Arquivos estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Inicializa serviços
+try:
+    import database
+    import auth
+    import chat_services
+    import ia_services
+    import system_info
+    print("✅ Todos os serviços carregados")
+except Exception as e:
+    print(f"⚠️  Erro nos serviços: {e}")
+
+# Importa e inclui rotas
+try:
+    from routes import router
+    app.include_router(router)
+    print("✅ Rotas carregadas")
+except Exception as e:
+    print(f"⚠️  Erro nas rotas: {e}")
+
+# ✅ Rota de fallback caso ainda haja problema
+@app.get("/fallback")
+async def fallback_page():
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Chat System - IA Gratuita</title>
+        <link rel="stylesheet" href="/static/css/widgets.css">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                padding: 40px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                text-align: center;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 Chat System - Fallback</h1>
+            <p>Template carregado via fallback. Widgets funcionando!</p>
+            <div class="credential-box" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h3>🔐 Credenciais Dev</h3>
+                <p><strong>Usuário:</strong> admin</p>
+                <p><strong>Senha:</strong> admin123</p>
+            </div>
+        </div>
+        
+        <script src="/static/js/user-widget.js"></script>
+        <script src="/static/js/dev-widget.js"></script>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+if __name__ == "__main__":
+    print("🚀 Chat System - Com Contexto de IA")
+    print("📍 Acesse: http://localhost:8000")
+    print("📍 Fallback: http://localhost:8000/fallback")
+    print("🔐 Credenciais: admin / admin123")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+/* ==== FIM: app.py ==== */
+
+/* ==== INÍCIO: auth.py ==== */
+# auth.py
+import hashlib
+import secrets
+from datetime import datetime, timedelta
+import database
+
+class AuthService:
+    def __init__(self):
+        self.token_expire_hours = 24
+    
+    def hash_password(self, password: str) -> str:
+        """Hash seguro da senha"""
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verifica se a senha corresponde ao hash"""
+        return self.hash_password(plain_password) == hashed_password
+    
+    def create_session_token(self, dev_user_id: int) -> str:
+        """Cria um token de sessão seguro"""
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now() + timedelta(hours=self.token_expire_hours)
+        
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO dev_session_token (token, dev_user_id, expires_at)
+            VALUES (?, ?, ?)
+        ''', (token, dev_user_id, expires_at))
+        
+        conn.commit()
+        conn.close()
+        
+        return token
+    
+    def verify_token(self, token: str) -> dict:
+        """Verifica se o token é válido e retorna dados do usuário"""
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT st.dev_user_id, st.expires_at, du.username, du.email
+            FROM dev_session_token st
+            JOIN dev_user du ON st.dev_user_id = du.id
+            WHERE st.token = ? AND st.is_active = TRUE
+        ''', (token,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if not result:
+            return None
+        
+        dev_user_id, expires_at, username, email = result
+        
+        # Verifica se o token expirou
+        if datetime.now() > datetime.fromisoformat(expires_at):
+            return None
+        
+        return {
+            "dev_user_id": dev_user_id,
+            "username": username,
+            "email": email
+        }
+    
+    def login_dev(self, username: str, password: str) -> dict:
+        """Login do desenvolvedor"""
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, username, email, password_hash
+            FROM dev_user
+            WHERE username = ? OR email = ?
+        ''', (username, username))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            return {"success": False, "error": "Credenciais inválidas"}
+        
+        user_id, username, email, password_hash = user
+        
+        if not self.verify_password(password, password_hash):
+            return {"success": False, "error": "Credenciais inválidas"}
+        
+        token = self.create_session_token(user_id)
+        
+        return {
+            "success": True,
+            "token": token,
+            "user": {
+                "id": user_id,
+                "username": username,
+                "email": email
+            }
+        }
+
+# Instância global
+auth_service = AuthService()
+/* ==== FIM: auth.py ==== */
+
+/* ==== INÍCIO: chat_services.py ==== */
+# chat_services.py - COMPLETO E CORRIGIDO
+from datetime import datetime
+import database
+from ia_services import ia_service
+
+class ChatService:
+    def __init__(self):
+        self.max_history_messages = 10
+        from code_analyzer import code_analyzer
+        self.code_analyzer = code_analyzer
+    
+    # === SERVIÇOS DE DEV ===
+    
+    def create_dev_chat_session(self, dev_user_id: int, title: str = None, session_type: str = "general"):
+        """Cria nova sessão de chat para dev"""
+        if not title:
+            title = f"Chat {datetime.now().strftime('%d/%m %H:%M')}"
+        
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO dev_chat_session (dev_user_id, title, session_type, last_interaction)
+            VALUES (?, ?, ?, ?)
+        ''', (dev_user_id, title, session_type, datetime.now()))
+        
+        session_id = cursor.lastrowid
+        
+        conn.commit()
+        conn.close()
+        
+        return self.get_dev_session(session_id)
+    
+    def get_dev_sessions(self, dev_user_id: int):
+        """Lista todas as sessões do dev"""
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, title, session_type, model_name, created_at, last_interaction
+            FROM dev_chat_session
+            WHERE dev_user_id = ?
+            ORDER BY last_interaction DESC
+        ''', (dev_user_id,))
+        
+        sessions = []
+        for row in cursor.fetchall():
+            sessions.append({
+                "id": row[0],
+                "title": row[1],
+                "session_type": row[2],
+                "model_name": row[3],
+                "created_at": row[4],
+                "last_interaction": row[5]
+            })
+        
+        conn.close()
+        return sessions
+    
+    def get_dev_session(self, session_id: int):
+        """Busca uma sessão específica"""
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, dev_user_id, title, session_type, model_name, created_at, last_interaction
+            FROM dev_chat_session
+            WHERE id = ?
+        ''', (session_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            return None
+        
+        return {
+            "id": row[0],
+            "dev_user_id": row[1],
+            "title": row[2],
+            "session_type": row[3],
+            "model_name": row[4],
+            "created_at": row[5],
+            "last_interaction": row[6]
+        }
+    
+    def get_dev_messages(self, session_id: int):
+        """Busca mensagens de uma sessão"""
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT role, content, created_at
+            FROM dev_chat_message
+            WHERE session_id = ?
+            ORDER BY created_at ASC
+        ''', (session_id,))
+        
+        messages = []
+        for row in cursor.fetchall():
+            messages.append({
+                "role": row[0],
+                "content": row[1],
+                "created_at": row[2]
+            })
+        
+        conn.close()
+        return messages
+    
+    def send_dev_message(self, session_id: int, dev_user_id: int, content: str, action_type: str = None):
+        """Envia mensagem com histórico inteligente - MELHORADO"""
+        # Verifica se a sessão pertence ao dev
+        session = self.get_dev_session(session_id)
+        if not session or session["dev_user_id"] != dev_user_id:
+            return {"error": "Sessão não encontrada ou acesso negado"}
+        
+        # Salva mensagem do dev
+        conn = database.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO dev_chat_message (session_id, role, content)
+            VALUES (?, 'dev', ?)
+        ''', (session_id, content))
+        
+        # Atualiza última interação
+        cursor.execute('''
+            UPDATE dev_chat_session 
+            SET last_interaction = ? 
+            WHERE id = ?
+        ''', (datetime.now(), session_id))
+        
+        conn.commit()
+        
+        # Busca MAIS histórico para contexto melhor
+        cursor.execute('''
+            SELECT role, content
+            FROM dev_chat_message
+            WHERE session_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+        ''', (session_id, 10))  # ✅ Aumentado para 10 mensagens
+        
+        history = cursor.fetchall()
+        history.reverse()
+        
+        # Prepara mensagens para a IA (AGORA MAIS INTELIGENTE)
+        messages = []
+        for role, content in history:
+            # ✅ Converte roles para o formato OpenAI
+            openai_role = "user" if role == "dev" else "assistant"
+            messages.append({"role": openai_role, "content": content})
+        
+        # ✅ Se é uma ação, adiciona contexto natural
+        if action_type and messages:
+            # Mantém a última mensagem do usuário como contexto
+            last_user_msg = None
+            for msg in reversed(messages):
+                if msg['role'] == 'user':
+                    last_user_msg = msg
+                    break
+            
+            # Se encontrou mensagem anterior, usa como contexto
+            if last_user_msg:
+                # ✅ ADICIONA contexto da ação sem repetir toda a conversa
+                action_context_msg = {
+                    "role": "user", 
+                    "content": f"Ação solicitada: {action_type}. Contexto: {last_user_msg['content'][:100]}..."
+                }
+                messages.append(action_context_msg)
+        
+        # Obtém resposta da IA
+        ia_response = ia_service.dev_chat(messages, action_type)  
+        
+        # Salva resposta da IA
+        cursor.execute('''
+            INSERT INTO dev_chat_message (session_id, role, content)
+            VALUES (?, 'ia', ?)
+        ''', (session_id, ia_response))
+        
+        # Atualiza última interação novamente
+        cursor.execute('''
+            UPDATE dev_chat_session 
+            SET last_interaction = ? 
+            WHERE id = ?
+        ''', (datetime.now(), session_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"response": ia_response}
+    
+    # === SERVIÇOS DE USUÁRIO ===
+    
+    def send_user_message(self, content: str, user_identifier: str = "anonymous"):
+        """Processa mensagem do usuário comum com contexto inteligente"""
+        # Simula histórico básico para contexto
+        messages = [{"role": "user", "content": content}]
+        ia_response = ia_service.user_chat(messages, user_identifier)
+        
+        return {"response": ia_response}
+    
+    def analyze_code_issues(self, dev_user_id: int):
+        """Analisa o código - COM LOGS DE DEBUG MELHORADO"""
+        print("🔍 Iniciando análise de código...")
+        
+        try:
+            issues = self.code_analyzer.analyze_project()
+            print(f"✅ Análise completada: {len(issues['duplicate_functions'])} duplicatas encontradas")
+            
+            formatted_issues = []
+            
+            # Duplicatas (ignora __init__ que são normais)
+            if issues['duplicate_functions']:
+                for dup in issues['duplicate_functions'][:3]:
+                    if dup['function'] != '__init__':  # ✅ Filtra __init__
+                        formatted_issues.append(f"🚨 {dup['function']} em {dup['file1']} e {dup['file2']}")
+            
+            # Segurança
+            if issues['security_issues']:
+                for sec in issues['security_issues'][:2]:
+                    formatted_issues.append(f"🔒 {sec['issue']} em {sec['file']}")
+            
+            # Erros
+            if issues['error_handling']:
+                for err in issues['error_handling'][:2]:
+                    formatted_issues.append(f"⚠️ {err['issue']} em {err['file']}")
+            
+            if not formatted_issues:
+                return {"issues": ["✅ Nenhum problema crítico encontrado"]}
+            
+            print(f"📋 Retornando {len(formatted_issues)} issues")
+            return {"issues": formatted_issues}
+            
+        except Exception as e:
+            print(f"❌ Erro na análise: {e}")
+            return {"error": f"Erro na análise: {str(e)}"}
+        
+    def delete_dev_session(self, session_id: int, dev_user_id: int):
+        """Deleta uma sessão específica do dev"""
+        try:
+            success = database.db.delete_dev_session(session_id, dev_user_id)
+            if success:
+                return {"success": True, "message": "Sessão deletada com sucesso"}
+            else:
+                return {"error": "Sessão não encontrada ou acesso negado"}
+        except Exception as e:
+            return {"error": f"Erro ao deletar sessão: {str(e)}"}
+    
+    def delete_all_dev_sessions(self, dev_user_id: int):
+        """Deleta todas as sessões do dev"""
+        try:
+            success = database.db.delete_all_dev_sessions(dev_user_id)
+            if success:
+                return {"success": True, "message": "Todas as sessões foram deletadas"}
+            else:
+                return {"error": "Erro ao deletar sessões"}
+        except Exception as e:
+            return {"error": f"Erro ao deletar sessões: {str(e)}"}
+
+# Instância global
+chat_service = ChatService()
+/* ==== FIM: chat_services.py ==== */
+
+/* ==== INÍCIO: check_reality.py ==== */
+# check_reality.py - CORRIGIDO
+import os
+import ast
+
+def analisar_funcoes_reais():
+    """Analisa as funções que REALMENTE existem no código"""
+    # AGORA procura na pasta correta
+    project_root = os.path.dirname(__file__)  # Já está em chat_system/
+    
+    funcoes_por_arquivo = {}
+    
+    arquivos = ['auth.py', 'chat_services.py', 'ia_services.py', 'routes.py', 'database.py', 'config.py', 'app.py']
+    
+    for arquivo in arquivos:
+        caminho = os.path.join(project_root, arquivo)  # CORRIGIDO: não precisa de chat_system/
+        if os.path.exists(caminho):
+            try:
+                with open(caminho, 'r', encoding='utf-8') as f:
+                    conteudo = f.read()
+                
+                tree = ast.parse(conteudo)
+                funcoes = []
+                
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        funcoes.append({
+                            'nome': node.name,
+                            'args': [arg.arg for arg in node.args.args],
+                            'linha': node.lineno
+                        })
+                
+                funcoes_por_arquivo[arquivo] = funcoes
+                print(f"✅ {arquivo}: {[f['nome'] for f in funcoes]}")
+                
+            except Exception as e:
+                print(f"⚠️  {arquivo}: Erro de análise - {e}")
+        else:
+            print(f"❌ {arquivo}: Arquivo não encontrado")
+    
+    return funcoes_por_arquivo
+
+def encontrar_duplicatas_reais():
+    """Encontra duplicatas REAIS baseado nos arquivos existentes"""
+    funcoes_por_arquivo = analisar_funcoes_reais()
+    todas_funcoes = {}
+    duplicatas = []
+    
+    for arquivo, funcoes in funcoes_por_arquivo.items():
+        for funcao in funcoes:
+            nome = funcao['nome']
+            if nome in todas_funcoes:
+                duplicatas.append({
+                    'funcao': nome,
+                    'arquivo1': todas_funcoes[nome],
+                    'arquivo2': arquivo,
+                    'linha': funcao['linha']
+                })
+            else:
+                todas_funcoes[nome] = arquivo
+    
+    print(f"\n🔍 DUPLICATAS ENCONTRADAS: {len(duplicatas)}")
+    for dup in duplicatas:
+        print(f"   🚨 {dup['funcao']}: {dup['arquivo1']} ↔ {dup['arquivo2']}")
+    
+    return duplicatas
+
+if __name__ == "__main__":
+    print("🔍 ANALISANDO REALIDADE DO CÓDIGO:")
+    print("=" * 50)
+    duplicatas = encontrar_duplicatas_reais()
+/* ==== FIM: check_reality.py ==== */
+
+/* ==== INÍCIO: code_analyzer.py ==== */
+# code_analyzer.py - VERSÃO DEFINITIVA
+import os
+import ast
+
+class CodeAnalyzer:
+    def __init__(self):
+        self.project_root = os.path.dirname(__file__)
+    
+    def analyze_project(self):
+        """Analisa baseado na REALIDADE encontrada"""
+        try:
+            return {
+                'duplicate_functions': self.find_meaningful_duplicates(),
+                'security_issues': self.find_security_issues_real(),
+                'error_handling': self.check_error_handling_real()
+            }
+        except Exception as e:
+            print(f"❌ Erro análise: {e}")
+            return {'duplicate_functions': [], 'security_issues': [], 'error_handling': []}
+    
+    def find_meaningful_duplicates(self):
+        """Encontra duplicatas que IMPORTAM (ignora __init__)"""
+        todas_funcoes = {}
+        duplicatas_significativas = []
+        
+        arquivos = ['auth.py', 'chat_services.py', 'ia_services.py', 'routes.py', 'database.py']
+        
+        for arquivo in arquivos:
+            caminho = os.path.join(self.project_root, arquivo)
+            if os.path.exists(caminho):
+                try:
+                    with open(caminho, 'r', encoding='utf-8') as f:
+                        tree = ast.parse(f.read())
+                    
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.FunctionDef):
+                            nome_funcao = node.name
+                            # IGNORA __init__ (são normais em classes)
+                            if nome_funcao == '__init__':
+                                continue
+                                
+                            if nome_funcao in todas_funcoes:
+                                duplicatas_significativas.append({
+                                    'function': nome_funcao,
+                                    'file1': todas_funcoes[nome_funcao],
+                                    'file2': arquivo,
+                                    'linha': node.lineno
+                                })
+                            else:
+                                todas_funcoes[nome_funcao] = arquivo
+                except Exception as e:
+                    print(f"⚠️  Erro analisando {arquivo}: {e}")
+        
+        print(f"✅ Duplicatas significativas: {len(duplicatas_significativas)}")
+        return duplicatas_significativas
+    
+    def find_security_issues_real(self):
+        """Problemas de segurança REAIS"""
+        problemas = []
+        padroes_perigosos = {
+            'eval(': 'eval() - risco de segurança',
+            'exec(': 'exec() - risco de segurança', 
+        }
+        
+        arquivos = ['auth.py', 'chat_services.py', 'ia_services.py', 'routes.py', 'database.py']
+        
+        for arquivo in arquivos:
+            caminho = os.path.join(self.project_root, arquivo)
+            if os.path.exists(caminho):
+                try:
+                    with open(caminho, 'r', encoding='utf-8') as f:
+                        conteudo = f.read()
+                    
+                    for padrao, descricao in padroes_perigosos.items():
+                        if padrao in conteudo:
+                            problemas.append({
+                                'file': arquivo,
+                                'issue': descricao,
+                                'pattern': padrao
+                            })
+                except:
+                    continue
+        
+        return problemas
+    
+    def check_error_handling_real(self):
+        """Verifica tratamento de erros REAL"""
+        problemas = []
+        
+        arquivos = ['auth.py', 'chat_services.py', 'ia_services.py', 'routes.py', 'database.py']
+        
+        for arquivo in arquivos:
+            caminho = os.path.join(self.project_root, arquivo)
+            if os.path.exists(caminho):
+                try:
+                    with open(caminho, 'r', encoding='utf-8') as f:
+                        conteudo = f.read()
+                    
+                    try_count = conteudo.count('try:')
+                    func_count = conteudo.count('def ')
+                    
+                    # Arquivos com muitas funções mas pouco tratamento
+                    if func_count >= 5 and try_count <= 1:
+                        problemas.append({
+                            'file': arquivo,
+                            'issue': f'{func_count} funções, apenas {try_count} tratamento de erros',
+                            'funcoes': func_count,
+                            'try_blocks': try_count
+                        })
+                except:
+                    continue
+        
+        return problemas
+
+code_analyzer = CodeAnalyzer()
+/* ==== FIM: code_analyzer.py ==== */
+
+/* ==== INÍCIO: config.py ==== */
+# config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    # Database
+    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///chat_system.db')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production-2024')
+    
+    # IA Services
+    GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+    
+    # App Settings
+    DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+    TOKEN_EXPIRE_HOURS = 24
+    
+    # IA Limits
+    MAX_TOKENS = 2000
+    TEMPERATURE = 0.7
+    
+    @classmethod
+    def validate_config(cls):
+        if not cls.GROQ_API_KEY:
+            print("⚠️  GROQ_API_KEY não encontrada - O sistema funcionará em modo limitado")
+        else:
+            print("✅ Configuração carregada com sucesso")
+
+Config.validate_config()
+/* ==== FIM: config.py ==== */
+
+/* ==== INÍCIO: database.py ==== */
+# database.py
+import sqlite3
+import hashlib
+import os
+
+class Database:
+    def __init__(self):
+        self.db_path = "chat_system.db"
+    
+    def get_connection(self):
+        return sqlite3.connect(self.db_path, check_same_thread=False)
+    
+    def init_db(self):
+        """Cria todas as tabelas do sistema"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            # Tabela de desenvolvedores
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS dev_user (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabela de tokens de sessão
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS dev_session_token (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    token TEXT UNIQUE NOT NULL,
+                    dev_user_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    FOREIGN KEY (dev_user_id) REFERENCES dev_user (id)
+                )
+            ''')
+            
+            # Tabela de sessões de chat do dev
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS dev_chat_session (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dev_user_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    session_type TEXT DEFAULT 'general',
+                    model_name TEXT DEFAULT 'groq-llama',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (dev_user_id) REFERENCES dev_user (id)
+                )
+            ''')
+            
+            # Tabela de mensagens do dev
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS dev_chat_message (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id INTEGER NOT NULL,
+                    role TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (session_id) REFERENCES dev_chat_session (id)
+                )
+            ''')
+            
+            # Criar usuário dev padrão
+            password_hash = hashlib.sha256("admin123".encode()).hexdigest()
+            cursor.execute('''
+                INSERT OR IGNORE INTO dev_user (username, email, password_hash) 
+                VALUES (?, ?, ?)
+            ''', ("admin", "admin@system.com", password_hash))
+            
+            conn.commit()
+            conn.close()
+            print("✅ Banco de dados inicializado com sucesso!")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erro no banco de dados: {e}")
+            return False
+        
+    def delete_dev_session(self, session_id: int, dev_user_id: int) -> bool:
+        """Deleta uma sessão e todas suas mensagens"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            # Verifica se a sessão pertence ao usuário
+            cursor.execute('''
+                SELECT dev_user_id FROM dev_chat_session WHERE id = ?
+            ''', (session_id,))
+            
+            result = cursor.fetchone()
+            if not result or result[0] != dev_user_id:
+                conn.close()
+                return False
+            
+            # Deleta todas as mensagens da sessão primeiro
+            cursor.execute('DELETE FROM dev_chat_message WHERE session_id = ?', (session_id,))
+            
+            # Deleta a sessão
+            cursor.execute('DELETE FROM dev_chat_session WHERE id = ?', (session_id,))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erro ao deletar sessão: {e}")
+            return False
+    
+    def delete_all_dev_sessions(self, dev_user_id: int) -> bool:
+        """Deleta todas as sessões de um dev"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            # Busca todos os IDs de sessão do usuário
+            cursor.execute('SELECT id FROM dev_chat_session WHERE dev_user_id = ?', (dev_user_id,))
+            session_ids = [row[0] for row in cursor.fetchall()]
+            
+            # Deleta mensagens de todas as sessões
+            for session_id in session_ids:
+                cursor.execute('DELETE FROM dev_chat_message WHERE session_id = ?', (session_id,))
+            
+            # Deleta todas as sessões
+            cursor.execute('DELETE FROM dev_chat_session WHERE dev_user_id = ?', (dev_user_id,))
+            
+            conn.commit()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            print(f"❌ Erro ao deletar todas as sessões: {e}")
+            return False
+
+# Inicializa o banco
+db = Database()
+db.init_db()
+/* ==== FIM: database.py ==== */
+
+/* ==== INÍCIO: dev-widget.js ==== */
+class DevWidget {
+    constructor() {
+        this.isOpen = false;
+        this.isAuthenticated = false;
+        this.currentSessionId = null;
+        this.sessions = [];
+        this.token = localStorage.getItem('dev_token');
+        this.user = JSON.parse(localStorage.getItem('dev_user') || 'null');
+        this.responseHandler = new ResponseHandler();
+        this.analysisTools = new AnalysisTools();
+        this.conversationHistory = []; // ✅ NOVO: Histórico da conversa
+        
+        this.init();
+    }
+    
+    init() {
+        this.createWidget();
+        this.bindEvents();
+        
+        if (this.token && this.user) {
+            this.checkAuthentication();
+        }
+        
+        console.log('✅ Widget Dev carregado com melhorias técnicas');
+    }
+    
+    createWidget() {
+        const widgetBtn = document.createElement('button');
+        widgetBtn.id = 'devWidgetBtn';
+        widgetBtn.className = 'widget-btn';
+        widgetBtn.innerHTML = '🔧';
+        widgetBtn.title = 'Dev Assistant';
+        
+        const widgetWindow = document.createElement('div');
+        widgetWindow.id = 'devWidgetWindow';
+        widgetWindow.className = 'widget-window widget-hidden';
+        
+        widgetWindow.innerHTML = `
+            <div class="dev-container">
+                <div class="dev-sidebar">
+                    <div class="dev-sessions" id="devSessions"></div>
+                    <button class="new-session-btn" id="newSessionBtn">+ Novo</button>
+                </div>
+                <div class="dev-main">
+                    <div class="dev-header">
+                        <h3>Assistente Dev</h3>
+                        <button class="close-btn">&times;</button>
+                    </div>
+                    <div class="dev-content" id="devContent"></div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(widgetBtn);
+        document.body.appendChild(widgetWindow);
+        
+        this.elements = {
+            btn: widgetBtn,
+            window: widgetWindow,
+            sidebar: document.getElementById('devSessions'),
+            content: document.getElementById('devContent'),
+            closeBtn: widgetWindow.querySelector('.close-btn'),
+            newSessionBtn: document.getElementById('newSessionBtn')
+        };
+        
+        this.showAuthScreen();
+    }
+    
+    bindEvents() {
+        this.elements.btn.addEventListener('click', () => this.toggleWidget());
+        this.elements.closeBtn.addEventListener('click', () => this.closeWidget());
+        this.elements.newSessionBtn.addEventListener('click', () => this.createNewSession());
+    }
+    
+    async checkAuthentication() {
+        try {
+            const response = await fetch('/api/dev/sessions', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.isAuthenticated = true;
+                this.loadSessions();
+            } else {
+                this.logout();
+            }
+        } catch (error) {
+            console.error('Erro verificação auth:', error);
+            this.logout();
+        }
+    }
+    
+    showAuthScreen() {
+        this.elements.content.innerHTML = `
+            <div class="dev-auth">
+                <h3 style="text-align: center; margin-bottom: 16px; color: var(--text-color);">Login Dev</h3>
+                <input type="text" id="devUsername" class="auth-input" placeholder="Usuário" value="admin">
+                <input type="password" id="devPassword" class="auth-input" placeholder="Senha" value="admin123">
+                <button id="devLoginBtn" class="auth-btn">Entrar</button>
+                <div style="font-size: 12px; color: var(--secondary-color); text-align: center; margin-top: 12px;">
+                    Credenciais padrão: admin / admin123
+                </div>
+                <div id="authMessage"></div>
+            </div>
+        `;
+        
+        document.getElementById('devLoginBtn').addEventListener('click', () => this.login());
+        document.getElementById('devPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.login();
+        });
+    }
+    
+    async login() {
+        const username = document.getElementById('devUsername').value;
+        const password = document.getElementById('devPassword').value;
+        const authMessage = document.getElementById('authMessage');
+        
+        if (!username || !password) {
+            this.showMessage(authMessage, 'Preencha todos os campos', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/dev/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                this.isAuthenticated = true;
+                
+                localStorage.setItem('dev_token', this.token);
+                localStorage.setItem('dev_user', JSON.stringify(this.user));
+                
+                this.showMessage(authMessage, 'Login realizado!', 'success');
+                setTimeout(() => {
+                    this.loadSessions();
+                }, 1000);
+                
+            } else {
+                this.showMessage(authMessage, data.detail || 'Erro no login', 'error');
+            }
+            
+        } catch (error) {
+            this.showMessage(authMessage, 'Erro de conexão', 'error');
+            console.error('Erro login:', error);
+        }
+    }
+    
+    logout() {
+        this.isAuthenticated = false;
+        this.token = null;
+        this.user = null;
+        this.sessions = [];
+        this.currentSessionId = null;
+        
+        localStorage.removeItem('dev_token');
+        localStorage.removeItem('dev_user');
+        
+        this.showAuthScreen();
+    }
+    
+    async loadSessions() {
+        try {
+            const response = await fetch('/api/dev/sessions', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.sessions = data.sessions;
+                this.renderSessions();
+                
+                if (this.sessions.length > 0 && !this.currentSessionId) {
+                    this.selectSession(this.sessions[0].id);
+                } else if (this.sessions.length === 0) {
+                    this.showEmptyState();
+                }
+            } else {
+                this.logout();
+            }
+        } catch (error) {
+            console.error('Erro carregar sessões:', error);
+        }
+    }
+    
+    renderSessions() {
+        this.elements.sidebar.innerHTML = '';
+        
+        this.sessions.forEach(session => {
+            const sessionEl = document.createElement('div');
+            sessionEl.className = `session-item ${session.id === this.currentSessionId ? 'session-active' : ''}`;
+            sessionEl.innerHTML = `
+                <div class="session-content">
+                    <div class="session-title">${session.title}</div>
+                    <div class="session-date">${new Date(session.last_interaction).toLocaleDateString()}</div>
+                </div>
+                <button class="delete-session-btn" data-session-id="${session.id}" title="Deletar chat">
+                    🗑️
+                </button>
+            `;
+            
+            // Clique para selecionar sessão
+            sessionEl.querySelector('.session-content').addEventListener('click', () => this.selectSession(session.id));
+            
+            // Clique para deletar sessão
+            sessionEl.querySelector('.delete-session-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); // Impede que clique no botão selecione a sessão
+                this.deleteSession(session.id, session.title);
+            });
+            
+            this.elements.sidebar.appendChild(sessionEl);
+        });
+        
+        // Adiciona botão para deletar todas as sessões
+        if (this.sessions.length > 0) {
+            const deleteAllBtn = document.createElement('button');
+            deleteAllBtn.className = 'delete-all-btn';
+            deleteAllBtn.innerHTML = '🗑️ Deletar Todos';
+            deleteAllBtn.addEventListener('click', () => this.deleteAllSessions());
+            this.elements.sidebar.appendChild(deleteAllBtn);
+        }
+    }
+    
+    async deleteSession(sessionId, sessionTitle) {
+        if (!confirm(`Tem certeza que deseja deletar o chat "${sessionTitle}"?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/dev/sessions/${sessionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Sessão deletada:', data.message);
+                
+                // Recarrega a lista de sessões
+                await this.loadSessions();
+                
+                // Se era a sessão atual, mostra estado vazio
+                if (this.currentSessionId === sessionId) {
+                    this.currentSessionId = null;
+                    this.showEmptyState();
+                }
+            } else {
+                throw new Error('Erro ao deletar sessão');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao deletar sessão:', error);
+            alert('Erro ao deletar sessão. Tente novamente.');
+        }
+    }
+    
+    async deleteAllSessions() {
+        if (!confirm('Tem certeza que deseja deletar TODOS os chats? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/dev/sessions', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Todas as sessões deletadas:', data.message);
+                
+                // Limpa estado atual
+                this.sessions = [];
+                this.currentSessionId = null;
+                
+                // Recarrega a interface
+                this.renderSessions();
+                this.showEmptyState();
+            } else {
+                throw new Error('Erro ao deletar sessões');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao deletar sessões:', error);
+            alert('Erro ao deletar sessões. Tente novamente.');
+        }
+    }
+
+    
+    async selectSession(sessionId) {
+        this.currentSessionId = sessionId;
+        this.renderSessions();
+        await this.loadSessionMessages(sessionId);
+    }
+    
+    async loadSessionMessages(sessionId) {
+        try {
+            const response = await fetch(`/api/dev/sessions/${sessionId}/messages`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.showChatInterface(data.messages);
+            }
+        } catch (error) {
+            console.error('Erro carregar mensagens:', error);
+        }
+    }
+    
+    addMessage(role, content) {
+        if (!this.elements.devMessages) {
+            console.error('devMessages não está definido');
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role === 'dev' ? 'user-message' : 'ia-message'}`;
+        
+        // Processa o conteúdo para manter formatação
+        const processedContent = this.responseHandler.cleanResponse(content);
+        messageDiv.innerHTML = processedContent;
+        
+        this.elements.devMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+        this.checkScrollable();
+    }
+    
+    async analyzeCode() {
+        try {
+            this.addMessage('dev', '🔍 Analisando código do projeto...');
+            
+            const response = await fetch('/api/dev/analyze-code', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.issues) {
+                    data.issues.forEach(issue => {
+                        this.addMessage('ia', issue);
+                    });
+                    
+                    // Adiciona botões de ação após análise
+                    this.addActionTools();
+                } else if (data.error) {
+                    this.addMessage('ia', `❌ ${data.error}`);
+                }
+            }
+        } catch (error) {
+            this.addMessage('ia', '❌ Erro na análise de código');
+        }
+    }
+    
+    addActionTools() {
+        const toolsContainer = document.createElement('div');
+        toolsContainer.className = 'action-tools';
+        toolsContainer.style.cssText = `
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        `;
+        
+        const tools = [
+            { label: '📊 Análise Detalhada', action: 'detailed_analysis' },
+            { label: '🐛 Debug', action: 'debug' },
+            { label: '📝 Exemplo Prático', action: 'practical_example' },
+            { label: '🔍 Performance', action: 'performance' }
+        ];
+        
+        tools.forEach(tool => {
+            const button = document.createElement('button');
+            button.className = 'tech-tool-btn';
+            button.textContent = tool.label;
+            button.onclick = () => this.handleTechnicalTool(tool.action);
+            toolsContainer.appendChild(button);
+        });
+        
+        this.elements.devMessages.appendChild(toolsContainer);
+    }
+
+    showChatInterface(messages = []) {
+        this.elements.content.innerHTML = `
+            <div class="dev-messages" id="devMessages">
+                ${messages.map(msg => `
+                    <div class="message ${msg.role === 'dev' ? 'user-message' : 'ia-message'}">
+                        ${this.escapeHtml(msg.content)}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="dev-input-area">
+                <div class="dev-toolbar">
+                    <button class="tool-btn analyze" onclick="devWidget.analyzeCode()">
+                        🔍 Analisar Código
+                    </button>
+                    <button class="tool-btn delete" onclick="devWidget.deleteCurrentSession()">
+                        🗑️ Deletar Este Chat
+                    </button>
+                </div>
+                <div class="dev-input-group">
+                    <textarea 
+                        id="devMessageInput" 
+                        placeholder="Ex: Como corrigir funções duplicadas?"
+                        rows="1"
+                    ></textarea>
+                    <button id="devSendBtn">Enviar</button>
+                </div>
+            </div>
+        `;
+        
+        this.bindChatEvents();
+        this.scrollToBottom();
+        
+        // Adiciona botões de ação se já houver mensagens
+        if (messages.length > 0) {
+            setTimeout(() => this.addActionTools(), 100);
+        }
+    }
+
+    async deleteCurrentSession() {
+        if (!this.currentSessionId) return;
+        
+        const currentSession = this.sessions.find(s => s.id === this.currentSessionId);
+        if (currentSession) {
+            await this.deleteSession(this.currentSessionId, currentSession.title);
+        }
+    }
+
+    checkScrollable() {
+        if (this.elements.devMessages) {
+            const messages = this.elements.devMessages;
+            const isScrollable = messages.scrollHeight > messages.clientHeight;
+            
+            if (isScrollable) {
+                messages.classList.add('scrollable');
+            } else {
+                messages.classList.remove('scrollable');
+            }
+        }
+    }
+
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    bindChatEvents() {
+        const input = document.getElementById('devMessageInput');
+        const sendBtn = document.getElementById('devSendBtn');
+        const messagesContainer = document.getElementById('devMessages');
+        
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            sendBtn.disabled = !this.value.trim();
+        });
+        
+        sendBtn.addEventListener('click', () => this.sendDevMessage());
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!sendBtn.disabled) {
+                    this.sendDevMessage();
+                }
+            }
+        });
+        
+        this.elements.devMessages = messagesContainer;
+        this.elements.devInput = input;
+        this.elements.devSendBtn = sendBtn;
+    }
+    
+    async sendDevMessage() {
+        const message = this.elements.devInput.value.trim();
+        if (!message || !this.currentSessionId) return;
+        
+        await this.sendSmartMessage(message);
+        
+        // Limpa input
+        this.elements.devInput.value = '';
+        this.elements.devInput.style.height = 'auto';
+        this.elements.devSendBtn.disabled = true;
+    }
+    
+    handleTechnicalTool(action) {
+        // ✅ Mensagens mais conversacionais
+        const actionMessages = {
+            'detailed_analysis': '🔍 Vamos fazer uma análise técnica detalhada. Em que aspecto específico você gostaria de se aprofundar?',
+            'debug': '🐛 Vamos examinar o código em busca de problemas. Tem alguma área específica em mente?',
+            'practical_example': '📝 Vamos criar um exemplo prático juntos. Qual funcionalidade você gostaria de ver implementada?',
+            'performance': '⚡ Vamos analisar a performance do sistema. Qual métrica ou componente te preocupa mais?'
+        };
+        
+        const message = actionMessages[action] || 'Vamos explorar isso juntos. Por onde quer começar?';
+        this.sendSmartMessage(message, action);
+    }
+
+    async sendSmartMessage(message, actionType = null) {
+        if (!this.currentSessionId) return;
+        
+        this.addMessage('dev', message);
+        this.showDevTypingIndicator();
+        
+        try {
+            const payload = {
+                session_id: this.currentSessionId,
+                content: message
+            };
+            
+            if (actionType) {
+                payload.action_type = actionType;
+            }
+            
+            const response = await fetch('/api/dev/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.hideDevTypingIndicator();
+                this.addMessage('ia', data.response);
+                
+                // ✅ ADICIONADO: Botão de continuidade após resposta
+                this.addContinuationPrompt(data.response, actionType);
+                
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+        } catch (error) {
+            this.hideDevTypingIndicator();
+            this.addMessage('ia', '❌ Erro de conexão');
+            console.error('Erro sendSmartMessage:', error);
+        }
+    }
+
+    addContinuationPrompt(aiResponse, actionType) {
+        // ✅ NOVO: Adiciona prompts de continuidade baseados no contexto
+        const continuationPrompts = {
+            'detailed_analysis': [
+                '📊 Quer analisar outro componente?',
+                '🔍 Focar em segurança ou performance?',
+                '📈 Explorar métricas específicas?'
+            ],
+            'debug': [
+                '🐛 Verificar outro arquivo?',
+                '🔧 Testar uma solução diferente?',
+                '📝 Implementar os fixes sugeridos?'
+            ],
+            'practical_example': [
+                '🚀 Evoluir este exemplo?',
+                '💡 Ver uma abordagem alternativa?',
+                '🔍 Adicionar mais funcionalidades?'
+            ],
+            'performance': [
+                '⚡ Otimizar outro aspecto?',
+                '📊 Medir impacto das mudanças?',
+                '🔍 Analisar consumo de recursos?'
+            ]
+        };
+
+        // Só adiciona se a resposta não já tiver engajamento
+        if (!aiResponse.includes('?') && !aiResponse.includes('Quer') && !aiResponse.includes('Vamos')) {
+            const prompts = continuationPrompts[actionType] || [
+                '💭 Como posso ajudar ainda mais?',
+                '🚀 Quer explorar outro aspecto?',
+                '🔍 Tem alguma dúvida específica?'
+            ];
+            
+            // Adiciona após um delay
+            setTimeout(() => {
+                const promptContainer = document.createElement('div');
+                promptContainer.className = 'continuation-prompt';
+                promptContainer.innerHTML = `
+                    <div class="prompt-text">${prompts[0]}</div>
+                    <div class="prompt-buttons">
+                        <button class="prompt-btn" onclick="devWidget.quickResponse('${prompts[0]}')">Sim</button>
+                        <button class="prompt-btn" onclick="this.parentElement.parentElement.remove()">Agora não</button>
+                    </div>
+                `;
+                this.elements.devMessages.appendChild(promptContainer);
+                this.scrollToBottom();
+            }, 1000);
+        }
+    }
+
+    quickResponse(prompt) {
+        // ✅ NOVO: Resposta rápida aos prompts de continuidade
+        this.sendSmartMessage(prompt);
+        
+        // Remove o prompt
+        const promptElement = this.elements.devMessages.querySelector('.continuation-prompt');
+        if (promptElement) {
+            promptElement.remove();
+        }
+    }
+    
+    updateConversationHistory(userMessage, aiResponse) {
+        // ✅ Mantém um histórico limpo da conversa
+        this.conversationHistory.push(
+            { role: 'user', content: userMessage },
+            { role: 'assistant', content: aiResponse }
+        );
+        
+        // Limita o histórico para não ficar muito grande
+        if (this.conversationHistory.length > 20) {
+            this.conversationHistory = this.conversationHistory.slice(-20);
+        }
+    }
+    
+    getConversationContext() {
+        // ✅ Retorna o histórico formatado para contexto
+        if (this.conversationHistory.length === 0) {
+            return [];
+        }
+        
+        // Pega apenas as últimas 6 mensagens para contexto
+        return this.conversationHistory.slice(-6);
+    }
+
+
+
+    getCurrentContext() {
+        const mensagens = this.elements.devMessages?.querySelectorAll('.message') || [];
+        const ultimasMensagens = Array.from(mensagens).slice(-4); // Últimas 4 mensagens
+        
+        if (ultimasMensagens.length === 0) return "o sistema atual";
+        
+        const contexto = ultimasMensagens.map(msg => {
+            const isUser = msg.classList.contains('user-message');
+            const texto = msg.textContent.substring(0, 80);
+            return `${isUser ? 'Pergunta' : 'Resposta'}: ${texto}${texto.length === 80 ? '...' : ''}`;
+        }).join(' | ');
+        
+        return contexto;
+    }
+    
+    showDevTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'devTypingIndicator';
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = `
+            IA analisando...
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        `;
+        
+        this.elements.devMessages.appendChild(typingDiv);
+        this.scrollToBottom();
+    }
+    
+    hideDevTypingIndicator() {
+        const typingIndicator = document.getElementById('devTypingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    async createNewSession() {
+        try {
+            const response = await fetch('/api/dev/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    title: `Chat ${new Date().toLocaleTimeString()}`,
+                    session_type: 'code_analysis'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                await this.loadSessions();
+                this.selectSession(data.session.id);
+            }
+        } catch (error) {
+            console.error('Erro criar sessão:', error);
+        }
+    }
+    
+    showEmptyState() {
+        this.elements.content.innerHTML = `
+            <div class="empty-state">
+                <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                <h3>Nenhum chat ainda</h3>
+                <p style="margin: 8px 0 16px 0;">Comece uma nova conversa técnica</p>
+                <button class="auth-btn" onclick="devWidget.createNewSession()">Criar Primeiro Chat</button>
+            </div>
+        `;
+    }
+    
+    showMessage(element, message, type) {
+        element.innerHTML = `<div class="${type}-message">${message}</div>`;
+    }
+    
+    scrollToBottom() {
+        if (this.elements.devMessages) {
+            setTimeout(() => {
+                this.elements.devMessages.scrollTop = this.elements.devMessages.scrollHeight;
+            }, 50);
+        }
+    }
+    
+    toggleWidget() {
+        this.isOpen = !this.isOpen;
+        
+        if (this.isOpen) {
+            this.elements.window.classList.remove('widget-hidden');
+            this.elements.window.classList.add('widget-visible');
+            
+            if (this.isAuthenticated && this.elements.devInput) {
+                this.elements.devInput.focus();
+            }
+        } else {
+            this.closeWidget();
+        }
+    }
+    
+    closeWidget() {
+        this.isOpen = false;
+        this.elements.window.classList.remove('widget-visible');
+        this.elements.window.classList.add('widget-hidden');
+    }
+}
+
+// Instância global
+let devWidget;
+
+// Inicializa quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    devWidget = new DevWidget();
+});
+/* ==== FIM: dev-widget.js ==== */
+
+/* ==== INÍCIO: ia_services.py ==== */
+# ia_services.py - CORRIGIDO
+import os
+import re
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class IAService:
+    def __init__(self):
+        self.groq_key = os.environ.get("GROQ_API_KEY")
+        self.use_real_ia = bool(self.groq_key)
+        self.conversation_threads = {}  # ✅ Threads de conversação por usuário
+        
+        if self.use_real_ia:
+            self.client = OpenAI(
+                api_key=self.groq_key,
+                base_url="https://api.groq.com/openai/v1"
+            )
+            print("✅ IA Groq - Conversação Contínua Ativa")
+        else:
+            print("⚠️  Modo MOCK - Conversação Contínua")
+
+    def dev_chat(self, messages, user_id="dev", action_type=None):
+        """Chat Dev com conversação contínua - MELHORADO"""
+        # ✅ Mantém thread de conversação
+        thread_id = f"dev_{user_id}"
+        if thread_id not in self.conversation_threads:
+            self.conversation_threads[thread_id] = []
+        
+        # Adiciona nova mensagem ao thread
+        if messages:
+            self.conversation_threads[thread_id].extend(messages[-2:])  # Mantém últimas 2
+        
+        # Limita o tamanho do thread
+        if len(self.conversation_threads[thread_id]) > 20:
+            self.conversation_threads[thread_id] = self.conversation_threads[thread_id][-20:]
+        
+        # Busca análise REAL do código
+        from code_analyzer import code_analyzer
+        analise_real = code_analyzer.analyze_project()
+        
+        # Prepara contexto inteligente
+        contexto_acao = self._get_continuous_context(action_type, messages, analise_real, thread_id)
+        
+        system_context = f"""
+        VOCÊ É UM ENGENHEIRO ESPECIALISTA EM CONVERSAÇÕES TÉCNICAS CONTÍNUAS.
+
+        CONTEXTO DO SISTEMA:
+        {self._format_real_analysis(analise_real)}
+
+        {contexto_acao}
+
+        SEU ESTILO DE CONVERSA:
+        - Mantenha a conversa fluida e contínua
+        - Não "feche" os tópicos - sempre permita continuação
+        - Use perguntas retóricas para engajar
+        - Ofereça aprofundamento natural
+        - Seja técnico mas acessível
+
+        EXEMPLOS DE RESPOSTAS CONTÍNUAS:
+        "Analisando esse aspecto mais a fundo..." 
+        "Quer que eu detalhe alguma parte específica?"
+        "Vamos explorar isso melhor..."
+        "Algum ponto em particular você gostaria de expandir?"
+
+        EVITE:
+        - "Passo 1, 2, 3..." (muito robótico)
+        - Encerrar tópicos abruptamente
+        - Listas muito longas sem engajamento
+        """
+
+        # Usa o thread completo para contexto
+        full_messages = self.conversation_threads[thread_id].copy()
+        
+        return self._continuous_groq_chat(full_messages, system_context, action_type)
+
+    def _get_continuous_context(self, action_type, messages, analise_real, thread_id):
+        """Contexto para conversação contínua - MELHORADO"""
+        if not action_type:
+            return "Continue a conversa naturalmente, permitindo aprofundamento nos tópicos."
+        
+        # Verifica se é continuação de ação anterior
+        last_action = getattr(self, f'_last_action_{thread_id}', None)
+        setattr(self, f'_last_action_{thread_id}', action_type)
+
+        
+        action_contexts = {
+            "detailed_analysis": f"""
+            CONTINUAÇÃO DA ANÁLISE DETALHADA:
+            {f'Continuação do tópico anterior: {last_action}' if last_action == 'detailed_analysis' else 'Iniciando análise detalhada...'}
+            
+            Mantenha a análise fluida e aprofundável. 
+            Convide para explorar aspectos específicos.
+            Ofereça diferentes ângulos de análise.
+            """,
+            
+            "debug": f"""
+            CONTINUAÇÃO DO DEBUG:
+            {f'Continuando debug do problema anterior' if last_action == 'debug' else 'Iniciando análise de debug...'}
+            
+            Explore os problemas de forma conversacional.
+            Peça mais contexto se necessário.
+            Sugira próximos passos naturalmente.
+            """,
+            
+            "practical_example": f"""
+            CONTINUAÇÃO DO EXEMPLO PRÁTICO:
+            {f'Expandindo o exemplo anterior' if last_action == 'practical_example' else 'Criando exemplo prático...'}
+            
+            Desenvolva o exemplo de forma incremental.
+            Peça feedback sobre a implementação.
+            Ofereça variações do exemplo.
+            """,
+            
+            "performance": f"""
+            CONTINUAÇÃO DA ANÁLISE DE PERFORMANCE:
+            {f'Aprofundando análise de performance' if last_action == 'performance' else 'Iniciando análise de performance...'}
+            
+            Explore métricas de forma conversacional.
+            Compare diferentes abordagens.
+            Peça contexto sobre casos de uso específicos.
+            """
+        }
+        
+        return action_contexts.get(action_type, "Continue a conversa técnica de forma natural.")
+
+    def _continuous_groq_chat(self, messages, system_context, action_type):
+        """Chat com foco em continuidade - NOVO"""
+        if not self.use_real_ia:
+            return self._continuous_mock_response(messages, system_context, action_type)
+        
+        try:
+            system_msg = {"role": "system", "content": system_context}
+            full_messages = [system_msg] + messages
+            
+            response = self.client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=full_messages,
+                temperature=0.7,  # Mais criativo para conversação
+                max_tokens=600,
+                timeout=15
+            )
+            
+            content = response.choices[0].message.content
+            return self._format_continuous_response(content, action_type)
+            
+        except Exception as e:
+            print(f"❌ Erro Groq: {e}")
+            return self._continuous_mock_response(messages, system_context, action_type)
+
+    def _format_continuous_response(self, text, action_type):
+        """Formata resposta para incentivar continuidade - NOVO"""
+        if not text:
+            return "Gostaria de explorar mais algum aspecto específico?"
+        
+        # Remove fechamentos muito definitivos
+        text = re.sub(r'(em conclusão|finalmente|para resumir|em suma)[^.!?]*[.!?]', '', text, flags=re.IGNORECASE)
+        
+        # Adiciona engajamento se a resposta for muito "fechada"
+        if not any(word in text.lower() for word in ['?', 'quer', 'gostaria', 'vamos', 'explorar', 'detalhar']):
+            engagement_phrases = [
+                "\n\nO que achou dessa abordagem?",
+                "\n\nQuer que eu detalhe algum ponto específico?",
+                "\n\nVamos explorar isso mais a fundo?",
+                "\n\nAlguma parte em particular te interessa mais?"
+            ]
+            
+            import random
+            text += random.choice(engagement_phrases)
+        
+        # Limpa HTML
+        text = re.sub(r'</?strong>', '**', text)
+        text = re.sub(r'</?code>', '`', text)
+        text = re.sub(r'<[^>]+>', '', text)
+        
+        return text
+
+    def _continuous_mock_response(self, messages, system_context, action_type):
+        """Mock responses que incentivam continuidade - MELHORADO"""
+        last_msg = messages[-1]['content'].lower() if messages else ""
+        
+        if "dev" in system_context.lower():
+            continuous_responses = {
+                "detailed_analysis": [
+                    "🔍 **Análise em Andamento:** Identifiquei alguns padrões interessantes na arquitetura. Quer que eu foque em algum componente específico como o sistema de autenticação ou a estrutura do banco?",
+                    
+                    "📊 **Profundizando Análise:** Analisando o tratamento de erros, vejo oportunidades em auth.py. Como você lida atualmente com falhas de autenticação? Podemos explorar isso.",
+                    
+                    "🔄 **Continuação da Análise:** Vamos olhar para a performance das queries SQLite? Ou prefere focar na escalabilidade da API? Me diga qual aspecto te interessa mais."
+                ],
+                
+                "debug": [
+                    "🐛 **Debug Contínuo:** Encontrei alguns pontos de melhoria no tratamento de exceções. Quer que eu mostre como implementar logs mais detalhados?",
+                    
+                    "🔧 **Aprofundando Debug:** Analisando o fluxo de autenticação, há oportunidades para melhorar a validação. Como você monitora tentativas de login atualmente?",
+                    
+                    "⚡ **Debug em Progresso:** Vamos examinar o consumo de memória do sistema? Ou prefere focar em otimização de consultas? Me oriente sobre sua prioridade."
+                ],
+                
+                "practical_example": [
+                    "📝 **Exemplo Expandido:** Aqui está uma implementação básica. Quer que eu adicione tratamento de erros ou prefere ver uma versão com cache?",
+                    
+                    "🚀 **Desenvolvendo Exemplo:** Vamos evoluir esse código juntos? Posso mostrar como adicionar logging, métricas ou testes unitários. O que te interessa?",
+                    
+                    "💡 **Exemplo em Camadas:** Esta é a versão simples. Quer ver como escalar para produção com rate limiting e monitoramento?"
+                ],
+                
+                "performance": [
+                    "⚡ **Análise de Performance Contínua:** Identifiquei oportunidades em consultas SQL. Quer que eu mostre como adicionar índices ou prefere otimização de conexões?",
+                    
+                    "📈 **Métricas em Foco:** Vamos explorar métricas específicas? Posso ajudar com monitoramento de tempo de resposta, throughput ou uso de recursos. Qual sua necessidade?",
+                    
+                    "🔍 **Performance Profunda:** Analisando o sistema, vejo potencial em cache. Quer implementar cache em memória ou prefere focar em otimização de algoritmos?"
+                ]
+            }
+            
+            import random
+            responses = continuous_responses.get(action_type, [
+                "💭 Interessante! Como posso ajudar você a explorar isso mais a fundo?",
+                "🔍 Vamos continuar essa análise? Em que aspecto específico você gostaria de se aprofundar?",
+                "🚀 Ótimo ponto! Quer que eu detalhe alguma parte específica ou explore uma abordagem diferente?"
+            ])
+            
+            return random.choice(responses)
+        else:
+            # Respostas contínuas para usuário
+            return "🤖 Como posso continuar ajudando você? Tem alguma dúvida específica ou quer explorar outra funcionalidade?"
+    def user_chat(self, messages, user_id="user"):
+        """Chat Usuário Inteligente - CORRIGIDO"""
+        system_context = """
+        VOCÊ É UM ASSISTENTE DO CHAT SYSTEM.
+
+        SOBRE ESTE SISTEMA:
+        - Site de chat com IA gratuita
+        - Dois widgets: 💬 (ajuda geral) e 🔧 (análise técnica)
+        - Desenvolvido com FastAPI, SQLite e JavaScript
+        - IA integrada com Groq API
+
+        SUAS FUNÇÕES:
+        - Explicar como o sistema funciona
+        - Ajudar a usar os recursos disponíveis
+        - Responder perguntas técnicas básicas
+        - Direcionar para análise técnica quando necessário
+
+        CREDENCIAIS DEV: admin / admin123
+
+        ESTILO:
+        - Respostas úteis e diretas (100-200 palavras)
+        - Tom amigável e profissional
+        - Use emojis moderadamente
+        - Ofereça ajuda adicional
+        """
+
+        return self._smart_groq_chat(messages, system_context)
+
+    def _get_smart_action_context(self, action_type, messages, analise_real):
+        """Gera contexto inteligente para ações - CORRIGIDO"""
+        if not action_type:
+            return "Forneça ajuda técnica geral baseada na conversa."
+        
+        # Pega a última mensagem do usuário para contexto
+        ultima_user_msg = ""
+        for msg in reversed(messages):
+            if msg['role'] == 'user':
+                ultima_user_msg = msg['content']
+                break
+        
+        action_contexts = {
+            "detailed_analysis": f"""
+            O usuário solicitou uma ANÁLISE DETALHADA.
+            
+            Contexto da conversa: {ultima_user_msg[:200] if ultima_user_msg else "Conversa geral"}
+            
+            Forneça uma análise técnica aprofundada incluindo:
+            - Arquitetura e estrutura do código
+            - Problemas identificados na análise real
+            - Recomendações de melhoria
+            - Impacto nas funcionalidades
+            """,
+            
+            "debug": f"""
+            O usuário solicitou DEBUG técnico.
+            
+            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Sistema geral"}
+            
+            Foque em:
+            - Identificar e explicar possíveis bugs
+            - Sugerir correções específicas
+            - Melhorar tratamento de erros
+            - Logs e monitoramento
+            """,
+            
+            "practical_example": f"""
+            O usuário solicitou um EXEMPLO PRÁTICO.
+            
+            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Implementação geral"}
+            
+            Forneça:
+            - Código implementável e testável
+            - Exemplo concreto relacionado ao contexto
+            - Explicação passo a passo
+            - Boas práticas aplicadas
+            """,
+            
+            "performance": f"""
+            O usuário solicitou análise de PERFORMANCE.
+            
+            Contexto: {ultima_user_msg[:200] if ultima_user_msg else "Otimização geral"}
+            
+            Analise:
+            - Possíveis gargalos de performance
+            - Otimizações específicas
+            - Melhorias de consulta e cache
+            - Métricas e monitoramento
+            """
+        }
+        
+        return action_contexts.get(action_type, "Forneça ajuda técnica geral.")
+
+    def _format_real_analysis(self, analise):
+        """Formata a análise real para contexto"""
+        partes = []
+        
+        if analise['duplicate_functions']:
+            for dup in analise['duplicate_functions'][:2]:
+                if dup['function'] != '__init__':  # Ignora __init__
+                    partes.append(f"🚨 {dup['function']} em {dup['file1']} e {dup['file2']}")
+        
+        if analise['error_handling']:
+            for err in analise['error_handling'][:2]:
+                partes.append(f"⚠️ {err['file']}: {err['issue']}")
+        
+        if analise['security_issues']:
+            for sec in analise['security_issues'][:2]:
+                partes.append(f"🔒 {sec['file']}: {sec['issue']}")
+        
+        return "\n".join(partes) if partes else "✅ Código estável"
+
+    def _smart_groq_chat(self, messages, system_context):
+        """Chat inteligente com fallback elegante - CORRIGIDO"""
+        if not self.use_real_ia:
+            return self._smart_mock_response(messages, system_context)
+        
+        try:
+            system_msg = {"role": "system", "content": system_context}
+            full_messages = [system_msg] + messages
+            
+            response = self.client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=full_messages,
+                temperature=0.3,
+                max_tokens=800,
+                timeout=15
+            )
+            
+            content = response.choices[0].message.content
+            return self._clean_response(content)
+            
+        except Exception as e:
+            print(f"❌ Erro Groq: {e}")
+            return self._smart_mock_response(messages, system_context)
+
+    def _smart_mock_response(self, messages, system_context):
+        """Resposta mock inteligente - CORRIGIDO"""
+        ultima_msg = messages[-1]['content'].lower() if messages else ""
+        
+        if "dev" in system_context.lower():
+            # Respostas mock melhoradas baseadas no contexto
+            if "análise detalhada" in ultima_msg or "detailed_analysis" in str(messages):
+                return "🔍 **Análise Detalhada:** O sistema mostra boa arquitetura. Melhore o tratamento de erros em auth.py. Configure GROQ_API_KEY para análise completa."
+            
+            elif "debug" in ultima_msg:
+                return "🐛 **Debug:** Verifique funções sem tratamento de erro em auth.py. Logs ajudariam no monitoramento. Configure GROQ_API_KEY para debug detalhado."
+            
+            elif "exemplo prático" in ultima_msg or "practical_example" in str(messages):
+                return "📝 **Exemplo Prático:** ```python\n# Melhoria em auth.py\ntry:\n    user = get_user(username)\nexcept Exception as e:\n    logger.error(f'Auth error: {e}')\n    return None\n```"
+            
+            elif "performance" in ultima_msg:
+                return "⚡ **Performance:** SQLite é adequado para testes. Para produção, considere PostgreSQL. Otimize consultas frequentes."
+            
+            else:
+                return "💡 Configure GROQ_API_KEY no .env para respostas técnicas completas e contextualizadas."
+        else:
+            # Respostas para usuário
+            if "funcion" in ultima_msg or "como" in ultima_msg:
+                return "🤖 Este é um sistema de chat com IA gratuita. Use 💬 para ajuda geral ou 🔧 para análise técnica (login: admin/admin123)."
+            elif "ajuda" in ultima_msg or "help" in ultima_msg:
+                return "💬 Posso ajudar! Este sistema permite conversar com IA. Para questões técnicas, use o widget 🔧."
+            else:
+                return "Olá! Sou o assistente deste sistema de chat. Como posso ajudar?"
+
+    def _clean_response(self, text):
+        """Limpa resposta mantendo qualidade"""
+        if not text: 
+            return "Resposta não disponível."
+        
+        # Remove HTML mas mantém formatação
+        text = re.sub(r'</?strong>', '**', text)
+        text = re.sub(r'</?code>', '`', text)
+        text = re.sub(r'<[^>]+>', '', text)
+        
+        # Limita tamanho mas preserva estrutura
+        if len(text) > 1000:
+            paragraphs = text.split('\n\n')
+            if len(paragraphs) > 3:
+                text = '\n\n'.join(paragraphs[:3]) + "\n\n..."
+        
+        return text.strip()
+
+# Instância global
+ia_service = IAService()
+/* ==== FIM: ia_services.py ==== */
+
+/* ==== INÍCIO: response-handler.js ==== */
+// response-handler.js
+class ResponseHandler {
+    constructor() {
+        this.typingSpeed = 30;
+        this.thinkingTime = 800;
+    }
+
+    async processResponse(response, messageType = 'user') {
+        let processedResponse = this.cleanResponse(response);
+        const contentType = this.detectContentType(processedResponse);
+        processedResponse = this.formatByContentType(processedResponse, contentType);
+        processedResponse = this.addContextualEmojis(processedResponse, contentType);
+        return processedResponse;
+    }
+
+    cleanResponse(text) {
+        if (!text) return 'Desculpe, não consegui processar a resposta.';
+        
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n{3,}/g, '\n\n')
+            .replace(/\s+\./g, '.')
+            .trim();
+    }
+
+    detectContentType(text) {
+        const lowerText = text.toLowerCase();
+        
+        if (lowerText.includes('erro') || lowerText.includes('error') || 
+            lowerText.includes('não funciona') || lowerText.includes('problema')) {
+            return 'error';
+        }
+        
+        if (lowerText.includes('código') || lowerText.includes('code') || 
+            lowerText.match(/function|class|const|let|var|def |import |export /)) {
+            return 'code';
+        }
+        
+        if (lowerText.includes('```') || lowerText.includes('python') || 
+            lowerText.includes('javascript') || lowerText.includes('html')) {
+            return 'code_block';
+        }
+        
+        if (lowerText.includes('exemplo') || lowerText.includes('exemplo:') || 
+            lowerText.includes('por exemplo')) {
+            return 'example';
+        }
+        
+        if (lowerText.includes('dica') || lowerText.includes('sugestão') || 
+            lowerText.includes('recomendação')) {
+            return 'tip';
+        }
+        
+        if (lowerText.match(/passo a passo|como fazer|tutorial/)) {
+            return 'tutorial';
+        }
+        
+        return 'general';
+    }
+
+    formatByContentType(text, contentType) {
+        switch (contentType) {
+            case 'code':
+                return this.formatCodeResponse(text);
+            case 'code_block':
+                return this.formatCodeBlock(text);
+            case 'error':
+                return this.formatErrorResponse(text);
+            case 'tip':
+                return this.formatTipResponse(text);
+            case 'tutorial':
+                return this.formatTutorialResponse(text);
+            case 'example':
+                return this.formatExampleResponse(text);
+            default:
+                return this.formatGeneralResponse(text);
+        }
+    }
+
+    formatCodeResponse(text) {
+        return text.replace(/```(\w+)?\n([\s\S]*?)```/g, 
+            '<div class="code-block"><div class="code-header">$1</div><pre><code>$2</code></pre></div>');
+    }
+
+    formatCodeBlock(text) {
+        return `<div class="code-container">${text}</div>`;
+    }
+
+    formatErrorResponse(text) {
+        return `🚨 <strong>Problema Detectado:</strong>\n\n${text}\n\n💡 <strong>Sugestão de Solução:</strong>`;
+    }
+
+    formatTipResponse(text) {
+        return `💡 <strong>Dica Profissional:</strong>\n\n${text}`;
+    }
+
+    formatTutorialResponse(text) {
+        const steps = text.split(/\d+\./).filter(step => step.trim());
+        let formatted = `📚 <strong>Passo a Passo:</strong>\n\n`;
+        
+        steps.forEach((step, index) => {
+            formatted += `${index + 1}. ${step.trim()}\n\n`;
+        });
+        
+        return formatted;
+    }
+
+    formatExampleResponse(text) {
+        return `📋 <strong>Exemplo Prático:</strong>\n\n${text}`;
+    }
+
+    formatGeneralResponse(text) {
+        const paragraphs = text.split('\n\n');
+        return paragraphs.map(p => {
+            if (p.startsWith('- ') || p.startsWith('• ')) {
+                return `• ${p.substring(2)}`;
+            }
+            return p;
+        }).join('\n\n');
+    }
+
+    addContextualEmojis(text, contentType) {
+        const emojis = {
+            'error': '🚨',
+            'code': '💻',
+            'code_block': '📝',
+            'tip': '💡',
+            'tutorial': '📚',
+            'example': '📋',
+            'general': '🤖'
+        };
+        
+        const emoji = emojis[contentType] || '💬';
+        return `${emoji} ${text}`;
+    }
+
+    async typeMessage(element, message, speed = this.typingSpeed) {
+        element.innerHTML = '';
+        await this.delay(this.thinkingTime);
+        
+        for (let i = 0; i < message.length; i++) {
+            element.innerHTML += message[i];
+            element.parentElement.scrollTop = element.parentElement.scrollHeight;
+            
+            const currentChar = message[i];
+            const nextChar = message[i + 1];
+            let charSpeed = speed;
+            
+            if (currentChar.match(/[.,;!?]/)) {
+                charSpeed = speed * 3;
+            } else if (nextChar && nextChar.match(/[.,;!?]/)) {
+                charSpeed = speed * 1.5;
+            }
+            
+            await this.delay(charSpeed);
+        }
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+/* ==== FIM: response-handler.js ==== */
+
+/* ==== INÍCIO: routes.py ==== */
+# routes.py
+from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+import auth
+import chat_services
+import os
+
+# ✅ Configura templates
+templates = Jinja2Templates(directory="templates")
+
+# ✅ Define o router
+router = APIRouter()
+
+# Models
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+# routes.py - ATUALIZAR ROTAS PARA AÇÕES
+class DevMessageRequest(BaseModel):
+    session_id: int
+    content: str
+    action_type: str = None  # NOVO: suporte a ações
+
+
+class UserMessageRequest(BaseModel):
+    content: str
+    user_identifier: str = "anonymous"
+
+class CreateSessionRequest(BaseModel):
+    title: str = None
+    session_type: str = "general"
+
+# === ROTA PRINCIPAL COM HTML ===
+@router.get("/", response_class=HTMLResponse)
+async def main_page(request: Request):
+    """Página principal com interface completa"""
+    return templates.TemplateResponse("base.html", {"request": request})
+
+# === ROTAS DE AUTENTICAÇÃO ===
+@router.post("/api/dev/login")
+async def dev_login(login_data: LoginRequest):
+    result = auth.auth_service.login_dev(login_data.username, login_data.password)
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail=result["error"])
+    return result
+
+# === ROTAS DE CHAT ===
+@router.get("/api/dev/sessions")
+async def get_dev_sessions(authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    sessions = chat_services.chat_service.get_dev_sessions(user_data["dev_user_id"])
+    return {"sessions": sessions}
+
+@router.post("/api/dev/sessions")
+async def create_dev_session(session_data: CreateSessionRequest, authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    session = chat_services.chat_service.create_dev_chat_session(
+        user_data["dev_user_id"], 
+        session_data.title,
+        session_data.session_type
+    )
+    return {"session": session}
+
+@router.get("/api/dev/sessions/{session_id}/messages")
+async def get_dev_messages(session_id: int, authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    session = chat_services.chat_service.get_dev_session(session_id)
+    if not session or session["dev_user_id"] != user_data["dev_user_id"]:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada")
+    messages = chat_services.chat_service.get_dev_messages(session_id)
+    return {"messages": messages}
+
+@router.post("/api/dev/send-message")
+async def send_dev_message(message_data: DevMessageRequest, authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    result = chat_services.chat_service.send_dev_message(
+        message_data.session_id,
+        user_data["dev_user_id"], 
+        message_data.content,
+        message_data.action_type  # NOVO: passa o tipo de ação
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return {"response": result["response"]}
+
+@router.post("/api/user/send-message")
+async def send_user_message(message_data: UserMessageRequest):
+    result = chat_services.chat_service.send_user_message(
+        message_data.content,
+        message_data.user_identifier
+    )
+    return {"response": result["response"]}
+
+# === ROTAS DE HEALTH ===
+@router.get("/health")
+async def health():
+    return {"status": "healthy", "service": "Chat System"}
+
+@router.get("/api/health")
+async def api_health():
+    return {
+        "status": "online", 
+        "version": "1.0.0",
+        "features": ["fastapi", "sqlite", "ia_gratuita", "widgets"]
+    }
+    
+@router.get("/api/dev/analyze-code")
+async def analyze_code(authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    result = chat_services.chat_service.analyze_code_issues(user_data["dev_user_id"])
+    return result
+
+
+@router.delete("/api/dev/sessions/{session_id}")
+async def delete_dev_session(session_id: int, authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    result = chat_services.chat_service.delete_dev_session(session_id, user_data["dev_user_id"])
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@router.delete("/api/dev/sessions")
+async def delete_all_dev_sessions(authorization: str = Header(None)):
+    user_data = _get_user_from_token(authorization)
+    result = chat_services.chat_service.delete_all_dev_sessions(user_data["dev_user_id"])
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+# === FUNÇÕES AUXILIARES ===
+def _get_user_from_token(authorization: str):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token necessário")
+    token = authorization[7:]
+    user_data = auth.auth_service.verify_token(token)
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    return user_data
+/* ==== FIM: routes.py ==== */
+
+/* ==== INÍCIO: run.py ==== */
+#!/usr/bin/env python3
+"""
+Script para executar o Chat System com IA Gratuita
+"""
+
+import uvicorn
+import os
+import webbrowser
+from datetime import datetime
+
+def main():
+    print("🚀 INICIANDO CHAT SYSTEM - IA GRATUITA")
+    print("=" * 50)
+    
+    # Verifica se o .env existe
+    if not os.path.exists('chat_system/.env'):
+        print("❌ Arquivo .env não encontrado!")
+        print("📋 Crie um arquivo .env com:")
+        print("""
+GROQ_API_KEY=sua_chave_groq_aqui
+DATABASE_URL=sqlite:///chat_system.db
+SECRET_KEY=sua_chave_secreta
+DEBUG=True
+        """)
+        return
+    
+    # Verifica dependências
+    try:
+        import fastapi
+        import sqlite3
+        import openai
+        print("✅ Todas as dependências encontradas")
+    except ImportError as e:
+        print(f"❌ Dependência faltando: {e}")
+        print("📦 Execute: pip install -r requirements.txt")
+        return
+    
+    print("📊 Configuração do sistema:")
+    print(f"   • Database: {os.getenv('DATABASE_URL', 'sqlite:///chat_system.db')}")
+    print(f"   • IA Service: {'Groq ✅' if os.getenv('GROQ_API_KEY') else 'Mock Mode ⚠️'}")
+    print(f"   • Debug: {os.getenv('DEBUG', 'True')}")
+    
+    print("\n🎯 URLs do sistema:")
+    print("   • Frontend: http://localhost:8000")
+    print("   • API Docs: http://localhost:8000/docs")
+    print("\n📍 Credenciais padrão:")
+    print("   • Usuário: admin")
+    print("   • Senha: admin123")
+    print("\n" + "=" * 50)
+    
+    # Pergunta se quer abrir o navegador
+    try:
+        choice = input("Abrir navegador automaticamente? (s/N): ").strip().lower()
+        if choice in ['s', 'sim', 'y', 'yes']:
+            webbrowser.open('http://localhost:8000')
+    except:
+        pass
+    
+    print("⏳ Iniciando servidor... (Ctrl+C para parar)")
+    
+    # Inicia o servidor
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
+
+if __name__ == "__main__":
+    main()
+/* ==== FIM: run.py ==== */
+
+/* ==== INÍCIO: system_info.py ==== */
+# system_info.py
+import os
+import sys
+from datetime import datetime
+
+class SystemInfo:
+    @staticmethod
+    def get_system_context():
+        """Retorna informações dinâmicas do sistema"""
+        return {
+            "system_name": "Chat System - IA Gratuita",
+            "version": "1.0.0",
+            "backend": "FastAPI + SQLite",
+            "frontend": "HTML/CSS/JS Vanilla",
+            "ia_provider": "Groq API (Llama 3.1)",
+            "widgets": [
+                {
+                    "name": "Widget Usuário",
+                    "icon": "💬",
+                    "position": "canto inferior direito",
+                    "purpose": "Chat geral de suporte"
+                },
+                {
+                    "name": "Widget Desenvolvedor", 
+                    "icon": "🔧",
+                    "position": "canto inferior esquerdo",
+                    "purpose": "Análise técnica e debug",
+                    "login_required": True,
+                    "credentials": "admin / admin123"
+                }
+            ],
+            "features": [
+                "IA 100% gratuita",
+                "Múltiplas sessões de chat",
+                "Autenticação segura",
+                "Histórico de conversas",
+                "Interface responsiva"
+            ],
+            "current_time": datetime.now().isoformat(),
+            "python_version": sys.version,
+            "environment": "production" if not os.getenv('DEBUG') else "development"
+        }
+    
+    @staticmethod
+    def get_tech_context():
+        """Retorna contexto técnico detalhado"""
+        return {
+            "architecture": {
+                "backend": {
+                    "framework": "FastAPI",
+                    "database": "SQLite",
+                    "auth": "Sistema próprio com tokens JWT-like",
+                    "api_style": "RESTful"
+                },
+                "frontend": {
+                    "approach": "Vanilla JavaScript",
+                    "styling": "CSS customizado",
+                    "widgets": "Web Components nativos",
+                    "state_management": "LocalStorage + Memória"
+                },
+                "ia_integration": {
+                    "provider": "Groq",
+                    "model": "llama-3.1-8b-instant", 
+                    "fallback": "Modo Mock quando sem chave"
+                }
+            },
+            "file_structure": """
+            chat_system/
+            ├── app.py                 # Aplicação principal
+            ├── database.py           # Modelos DB
+            ├── auth.py               # Autenticação
+            ├── chat_services.py      # Lógica de negócio
+            ├── ia_services.py        # Integração IA
+            ├── routes.py             # Rotas API
+            ├── system_info.py        # Informações sistema
+            ├── templates/
+            │   └── base.html         # HTML principal
+            └── static/
+                ├── css/
+                │   └── widgets.css   # Estilos
+                └── js/
+                    ├── user-widget.js
+                    └── dev-widget.js
+            """
+        }
+
+# Instância global
+system_info = SystemInfo()
+/* ==== FIM: system_info.py ==== */
+
+/* ==== INÍCIO: user-widget.js ==== */
+// user-widget.js
+class UserWidget {
+    constructor() {
+        this.isOpen = false;
+        this.responseHandler = new ResponseHandler();
+        this.init();
+    }
+    
+    init() {
+        this.createWidget();
+        this.bindEvents();
+        console.log('✅ Widget Usuário carregado com melhorias');
+    }
+    
+    createWidget() {
+        const widgetBtn = document.createElement('button');
+        widgetBtn.id = 'userWidgetBtn';
+        widgetBtn.className = 'widget-btn';
+        widgetBtn.innerHTML = '💬';
+        widgetBtn.title = 'Assistente Virtual';
+        
+        const widgetWindow = document.createElement('div');
+        widgetWindow.id = 'userWidgetWindow';
+        widgetWindow.className = 'widget-window widget-hidden';
+        
+        widgetWindow.innerHTML = `
+            <div class="user-header">
+                <h3>Assistente Virtual</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="user-messages" id="userMessages"></div>
+            <div class="user-input-area">
+                <div class="user-input-group">
+                    <input type="text" id="userMessageInput" placeholder="Digite sua mensagem...">
+                    <button id="userSendBtn" disabled>Enviar</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(widgetBtn);
+        document.body.appendChild(widgetWindow);
+        
+        this.elements = {
+            btn: widgetBtn,
+            window: widgetWindow,
+            messages: document.getElementById('userMessages'),
+            input: document.getElementById('userMessageInput'),
+            sendBtn: document.getElementById('userSendBtn'),
+            closeBtn: widgetWindow.querySelector('.close-btn')
+        };
+    }
+    
+    bindEvents() {
+        this.elements.btn.addEventListener('click', () => this.toggleWidget());
+        this.elements.closeBtn.addEventListener('click', () => this.closeWidget());
+        this.elements.sendBtn.addEventListener('click', () => this.sendUserMessage());
+        
+        this.elements.input.addEventListener('input', () => {
+            this.elements.sendBtn.disabled = !this.elements.input.value.trim();
+        });
+        
+        this.elements.input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !this.elements.sendBtn.disabled) {
+                this.sendUserMessage();
+            }
+        });
+    }
+    
+    async sendUserMessage() {
+        const message = this.elements.input.value.trim();
+        if (!message) return;
+        
+        this.addMessage('user', message);
+        this.elements.input.value = '';
+        this.elements.sendBtn.disabled = true;
+        
+        this.showTypingIndicator();
+        
+        try {
+            const response = await this.getAIResponse(message);
+            const processedResponse = await this.responseHandler.processResponse(response, 'user');
+            
+            this.hideTypingIndicator();
+            await this.showAIResponse(processedResponse);
+            
+        } catch (error) {
+            this.hideTypingIndicator();
+            this.addMessage('ai', this.getErrorMessage(error));
+        }
+    }
+    
+    async showAIResponse(response) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message ai-message';
+        this.elements.messages.appendChild(messageDiv);
+        
+        await this.responseHandler.typeMessage(messageDiv, response);
+        this.addActionButtons(messageDiv, response);
+        this.scrollToBottom();
+    }
+    
+    addActionButtons(messageElement, response) {
+        const actions = this.detectActions(response);
+        
+        if (actions.length > 0) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'action-buttons';
+            
+            actions.forEach(action => {
+                const button = document.createElement('button');
+                button.className = 'action-btn';
+                button.textContent = action.label;
+                button.onclick = () => this.handleAction(action);
+                buttonContainer.appendChild(button);
+            });
+            
+            messageElement.appendChild(buttonContainer);
+        }
+    }
+    
+    detectActions(response) {
+        const actions = [];
+        const lowerResponse = response.toLowerCase();
+        
+        if (lowerResponse.includes('código') || lowerResponse.includes('exemplo')) {
+            actions.push({
+                label: '📋 Copiar Código',
+                type: 'copy_code',
+                data: response
+            });
+        }
+        
+        if (lowerResponse.includes('explicar') || lowerResponse.includes('detalhes')) {
+            actions.push({
+                label: '🔍 Mais Detalhes',
+                type: 'more_details',
+                data: response
+            });
+        }
+        
+        return actions;
+    }
+    
+    handleAction(action) {
+        switch (action.type) {
+            case 'copy_code':
+                this.copyCodeToClipboard(action.data);
+                break;
+            case 'more_details':
+                this.requestMoreDetails(action.data);
+                break;
+        }
+    }
+    
+    copyCodeToClipboard(text) {
+        const codeMatch = text.match(/```[\s\S]*?```/);
+        if (codeMatch) {
+            const code = codeMatch[0].replace(/```\w*\n?/g, '').replace(/```/g, '');
+            navigator.clipboard.writeText(code).then(() => {
+                this.showTemporaryMessage('✅ Código copiado!');
+            });
+        }
+    }
+    
+    requestMoreDetails(context) {
+        this.addMessage('user', `Poderia dar mais detalhes sobre: "${context.substring(0, 50)}..."`);
+        this.sendUserMessage();
+    }
+    
+    showTemporaryMessage(message) {
+        const tempMsg = document.createElement('div');
+        tempMsg.className = 'temp-message';
+        tempMsg.textContent = message;
+        tempMsg.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            z-index: 10000;
+        `;
+        document.body.appendChild(tempMsg);
+        
+        setTimeout(() => {
+            tempMsg.remove();
+        }, 3000);
+    }
+    
+    async getAIResponse(message) {
+        try {
+            const response = await fetch('/api/user/send-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: message,
+                    user_identifier: 'web_user'
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.response;
+            
+        } catch (error) {
+            console.error('Erro na chamada da IA:', error);
+            throw error;
+        }
+    }
+    
+    addMessage(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role === 'user' ? 'user-message' : 'ai-message'}`;
+        messageDiv.textContent = content;
+        this.elements.messages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typingIndicator';
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = `
+            IA digitando...
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        `;
+        this.elements.messages.appendChild(typingDiv);
+        this.scrollToBottom();
+    }
+    
+    hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    getErrorMessage(error) {
+        console.error('Erro no widget usuário:', error);
+        
+        const errorMessages = {
+            'network': '🔌 Problema de conexão. Verifique sua internet.',
+            'timeout': '⏰ A resposta está demorando mais que o normal.',
+            'server': '🛠️ Estamos com problemas técnicos.',
+            'default': '❌ Ocorreu um erro inesperado.'
+        };
+        
+        if (error.name === 'TimeoutError') return errorMessages.timeout;
+        if (error.message.includes('Network')) return errorMessages.network;
+        if (error.status === 500) return errorMessages.server;
+        
+        return errorMessages.default;
+    }
+    
+    scrollToBottom() {
+        setTimeout(() => {
+            this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
+        }, 100);
+    }
+    
+    toggleWidget() {
+        this.isOpen = !this.isOpen;
+        if (this.isOpen) {
+            this.elements.window.classList.remove('widget-hidden');
+            this.elements.window.classList.add('widget-visible');
+            this.elements.input.focus();
+        } else {
+            this.closeWidget();
+        }
+    }
+    
+    closeWidget() {
+        this.isOpen = false;
+        this.elements.window.classList.remove('widget-visible');
+        this.elements.window.classList.add('widget-hidden');
+    }
+}
+
+// Instância global
+let userWidget;
+document.addEventListener('DOMContentLoaded', () => {
+    userWidget = new UserWidget();
+});
+/* ==== FIM: user-widget.js ==== */
